@@ -7,8 +7,6 @@ public class GameLifetimeScope : LifetimeScope
 {
     [SerializeField] private LevelLifetimeScope levelLifetimeScopePrefab;
 
-    public LevelLifetimeScope LevelLifetimeScopePrefab => levelLifetimeScopePrefab;
-
     protected override void Configure(IContainerBuilder builder)
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -18,6 +16,8 @@ public class GameLifetimeScope : LifetimeScope
 #endif
         builder.Register<ConfigParser>(Lifetime.Singleton);
         builder.Register<ConfigReader>(Lifetime.Singleton);
+
+        builder.RegisterInstance(levelLifetimeScopePrefab);
 
         builder.RegisterComponentOnNewGameObject<GameManager>(Lifetime.Singleton, "GameManager");
         builder.RegisterBuildCallback(container => container.Resolve<GameManager>());

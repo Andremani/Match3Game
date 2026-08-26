@@ -46,7 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelLifetimeScope
   parentReference:
-    TypeName: GameLifetimeScope
+    TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
   tilemap: {fileID: 5903403828740608634}
