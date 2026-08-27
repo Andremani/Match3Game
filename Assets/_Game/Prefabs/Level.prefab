@@ -49,7 +49,8 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
-  tilemap: {fileID: 5903403828740608634}
+  pieceViewMapping: {fileID: 11400000, guid: 8dd5628a9c4019148ad40f6c42088ec4, type: 2}
+  gameFieldView: {fileID: 6701218910841619066}
 --- !u!1 &1549526685960424666
 GameObject:
   m_ObjectHideFlags: 0
@@ -62,6 +63,7 @@ GameObject:
   - component: {fileID: 5903403828740608634}
   - component: {fileID: 4520799092013347123}
   - component: {fileID: 6187126940732907496}
+  - component: {fileID: 6701218910841619066}
   m_Layer: 0
   m_Name: BackgroundTilemap
   m_TagString: Untagged
@@ -81,7 +83,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 4353830412142817884}
   m_Father: {fileID: 7977512447840479863}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1839735485 &5903403828740608634
@@ -381,6 +384,22 @@ SpriteMask:
   m_IsCustomRangeActive: 0
   m_SpriteSortPoint: 0
   m_MaskSource: 1
+--- !u!114 &6701218910841619066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1549526685960424666}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61ddaadf6294a024185ae0bfbfdbdcad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameFieldView
+  tilemap: {fileID: 5903403828740608634}
+  fieldTile: {fileID: 11400000, guid: bff2c199be9fd15478bdecae7ed56bcc, type: 2}
+  piecesParent: {fileID: 4353830412142817884}
+  targetCamera: {fileID: 0}
 --- !u!1 &1791732898375677345
 GameObject:
   m_ObjectHideFlags: 0
@@ -405,12 +424,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1791732898375677345}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7977512447840479863}
+  m_Father: {fileID: 7911777465754963512}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3215466660291856877
 GameObject:
@@ -715,7 +734,6 @@ Transform:
   m_Children:
   - {fileID: 7911777465754963512}
   - {fileID: 1483909349572257749}
-  - {fileID: 4353830412142817884}
   m_Father: {fileID: 100101}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!156049354 &3652190671680215572

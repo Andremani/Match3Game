@@ -1,10 +1,9 @@
-using System.Linq;
-using System.Text;
 using Configuration;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;
+using VContainer.Unity;
 
 public class GameManager : MonoBehaviour
 {
@@ -32,57 +31,25 @@ public class GameManager : MonoBehaviour
 
     private async UniTaskVoid StartFirstLevelAsync()
     {
-        if(currentLevelScope != null) return;
+        if (currentLevelScope != null) return;
 
         LevelsListConfig levelsList = await configReader.LoadLevelsListAsync();
-        CurrentLevelName = levelsList.LevelNames[0];
-
-        currentLevelScope = Instantiate(levelLifetimeScopePrefab);
-        currentLevelScope.gameObject.name = $"Level '{CurrentLevelName}'";
-        Debug.Log($"Level '{CurrentLevelName}' created");
-
-        TestLogging().Forget();
+        await StartLevelAsync(levelsList.LevelNames[0]);
     }
 
-    private async UniTask TestLogging()
+    private async UniTask StartLevelAsync(string levelName)
     {
-        LevelsListConfig levelsList = await configReader.LoadLevelsListAsync();
-        CurrentLevelName = levelsList.LevelNames[0];
+        CurrentLevelName = levelName;
+
         PieceMappingsConfig pieceMappings = await configReader.LoadPieceMappingsAsync();
-        LevelConfig levelConfig = await configReader.LoadLevelConfigAsync(CurrentLevelName);
+        LevelConfig levelConfig = await configReader.LoadLevelConfigAsync(levelName);
 
-        LogLoadedConfigs(levelsList, pieceMappings, levelConfig);
-    }
-
-    private static void LogLoadedConfigs(LevelsListConfig levelsList, PieceMappingsConfig pieceMappings, LevelConfig levelConfig)
-    {
-        Debug.Log($"LevelsList: {string.Join(", ", levelsList.LevelNames)}");
-
-        string mappingLines = string.Join("\n", pieceMappings.PieceKeysBySymbol.Select(pair => $"{pair.Key}: {pair.Value}"));
-        Debug.Log($"PieceMappings:\n{mappingLines}");
-
-        Debug.Log(
-            $"LevelConfig: HorizontalSize={levelConfig.HorizontalSize}, VerticalSize={levelConfig.VerticalSize}, " +
-            $"MaxRegularPieceTypes={levelConfig.MaxRegularPieceTypes}, WinPieceType={levelConfig.WinPieceType}, " +
-            $"WinPieceAmount={levelConfig.WinPieceAmount}, MaxTurns={levelConfig.MaxTurns}\n{FormatMap(levelConfig.Map)}");
-    }
-
-    private static string FormatMap(char[,] map)
-    {
-        int horizontalSize = map.GetLength(0);
-        int verticalSize = map.GetLength(1);
-        StringBuilder builder = new();
-
-        for (int y = 0; y < verticalSize; y++)
+        using (LifetimeScope.Enqueue(builder =>
         {
-            for (int x = 0; x < horizontalSize; x++)
-            {
-                builder.Append(map[x, y]);
-            }
-
-            builder.Append('\n');
-        }
-
-        return builder.ToString();
+            builder.RegisterInstance(pieceMappings);
+            builder.RegisterInstance(levelConfig);
+        }))
+        currentLevelScope = Instantiate(levelLifetimeScopePrefab);
+        currentLevelScope.gameObject.name = $"Level '{levelName}'";
     }
 }

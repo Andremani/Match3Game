@@ -23,14 +23,17 @@ namespace Configuration
         public PieceMappingsConfig ParsePieceMappings(string raw)
         {
             Dictionary<char, string> pieceKeysBySymbol = new();
+            List<char> orderedSymbols = new();
 
             foreach (var line in SplitNonEmptyLines(raw))
             {
                 (string key, string value) = ParseKeyValueLine(line);
-                pieceKeysBySymbol[key[0]] = value;
+                char symbol = key[0];
+                pieceKeysBySymbol[symbol] = value;
+                orderedSymbols.Add(symbol);
             }
 
-            return new PieceMappingsConfig(pieceKeysBySymbol);
+            return new PieceMappingsConfig(pieceKeysBySymbol, orderedSymbols);
         }
 
         public LevelConfig ParseLevelConfig(string raw)

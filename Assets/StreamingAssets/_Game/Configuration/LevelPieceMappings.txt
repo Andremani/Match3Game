@@ -1,1 +1,9 @@
 1: red_stone
+2: green_stone
+3: purple_stone
+4: yellow_stone
+5: cyan_stone
+6: orange_stone
+7: gray_stone
+8: blue_stone
+9: dark_stone
