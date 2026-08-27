@@ -7,17 +7,34 @@ namespace Pieces
     [RequireComponent(typeof(Collider2D))]
     public class PieceView : MonoBehaviour
     {
+        private const float NudgeFactor = 0.1f;
+        private const int MovingSortingOrderOffset = 1;
+
         private SpriteRenderer spriteRenderer;
+        private Vector3 homePosition;
+        private float maxDragDistance;
+
+        private bool isMoving;
+        private int baseSortingOrder;
+        private SpriteMaskInteraction baseMaskInteraction;
 
         public Piece Piece { get; set; }
 
         private void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
+            baseSortingOrder = spriteRenderer.sortingOrder;
+            baseMaskInteraction = spriteRenderer.maskInteraction;
+        }
+
+        public void Initialize(Vector2 cellSize)
+        {
+            maxDragDistance = Mathf.Min(cellSize.x, cellSize.y) * NudgeFactor;
         }
 
         public void SetPosition(Vector3 worldPosition)
         {
+            homePosition = worldPosition;
             transform.position = worldPosition;
         }
 
@@ -26,11 +43,33 @@ namespace Pieces
             spriteRenderer.sprite = sprite;
         }
 
-        public UniTask MoveAsync(Vector3 targetPosition, float duration)
+        public void SetNudgeOffset(Vector2 rawOffset)
         {
+            SetMoving(true);
+            transform.position = homePosition + (Vector3)Vector2.ClampMagnitude(rawOffset, maxDragDistance);
+        }
+
+        public UniTask ReturnHomeAsync(float duration) => MoveAsync(homePosition, duration);
+
+        public async UniTask MoveAsync(Vector3 targetPosition, float duration)
+        {
+            homePosition = targetPosition;
+            SetMoving(true);
+
             UniTaskCompletionSource completionSource = new();
             transform.DOMove(targetPosition, duration).OnComplete(() => completionSource.TrySetResult());
-            return completionSource.Task;
+            await completionSource.Task;
+
+            SetMoving(false);
+        }
+
+        private void SetMoving(bool moving)
+        {
+            if (isMoving == moving) return;
+
+            isMoving = moving;
+            spriteRenderer.sortingOrder = baseSortingOrder + (moving ? MovingSortingOrderOffset : 0);
+            spriteRenderer.maskInteraction = moving ? SpriteMaskInteraction.None : baseMaskInteraction;
         }
 
         public UniTask PlayCollapseAsync(float duration)

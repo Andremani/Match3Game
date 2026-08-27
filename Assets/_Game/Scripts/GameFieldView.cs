@@ -14,6 +14,7 @@ public class GameFieldView : MonoBehaviour
     private int fieldHeight;
 
     public Transform PiecesParent => piecesParent;
+    public Vector2 CellSize => tilemap.cellSize;
 
     private void Awake()
     {

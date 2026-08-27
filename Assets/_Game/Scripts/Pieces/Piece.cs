@@ -18,6 +18,10 @@ namespace Pieces
 
         public UniTask MoveToAsync(Vector3 worldPosition, float duration) => View.MoveAsync(worldPosition, duration);
 
+        public void SetNudgeOffset(Vector2 offset) => View.SetNudgeOffset(offset);
+
+        public UniTask ReturnHomeAsync(float duration) => View.ReturnHomeAsync(duration);
+
         public UniTask PlayCollapseAsync(float duration) => View.PlayCollapseAsync(duration);
 
         public void Destroy() => Object.Destroy(View.gameObject);

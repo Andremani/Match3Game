@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -6,9 +7,12 @@ namespace Pieces
 {
     public class SwipeInputReader : MonoBehaviour
     {
+        private const float ReturnDuration = 0.15f;
+
         [SerializeField] private float swipeThreshold = 0.3f;
 
         private Camera mainCamera;
+
         private PieceView pressedView;
         private Vector2 pressWorldPosition;
 
@@ -32,22 +36,39 @@ namespace Pieces
 
             if (!IsPointerPressed())
             {
-                pressedView = null;
+                CancelDrag();
                 return;
             }
 
             if (!TryGetPointerCurrentPosition(out Vector2 currentPosition)) return;
 
             Vector2 delta = currentPosition - pressWorldPosition;
-            if (delta.magnitude < swipeThreshold) return;
 
+            if (delta.magnitude < swipeThreshold)
+            {
+                pressedView.Piece?.SetNudgeOffset(delta);
+                return;
+            }
+
+            ResolveSwipe(GetDirection(delta));
+        }
+
+        private void CancelDrag()
+        {
+            pressedView.Piece?.ReturnHomeAsync(ReturnDuration).Forget();
+            pressedView = null;
+        }
+
+        private void ResolveSwipe(SwipeDirection direction)
+        {
             Piece piece = pressedView.Piece;
             pressedView = null;
 
-            if (piece != null)
-            {
-                Swiped?.Invoke(piece, GetDirection(delta));
-            }
+            if (piece == null) return;
+
+            Debug.Log($"Swipe detected: {piece} -> {direction}");
+            piece.ReturnHomeAsync(ReturnDuration).Forget();
+            Swiped?.Invoke(piece, direction);
         }
 
         private PieceView RaycastPieceView(Vector2 worldPosition)
