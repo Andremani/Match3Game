@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Pieces
@@ -19,6 +20,12 @@ namespace Pieces
             view.Initialize(gameFieldView.CellSize);
             view.SetSprite(viewMapping.GetSprite(key));
             return new RegularPiece(view, key);
+        }
+
+        public RegularPiece CreateRandomRegularPiece(IReadOnlyList<string> allowedKeys, Transform parent)
+        {
+            string key = allowedKeys[Random.Range(0, allowedKeys.Count)];
+            return CreateRegularPiece(key, parent);
         }
     }
 }

@@ -6,20 +6,23 @@ using VContainer;
 public class LevelManager : MonoBehaviour
 {
     private GameField gameField;
+    private TurnResolver turnResolver;
     private LevelConfig levelConfig;
     private PieceMappingsConfig pieceMappings;
 
     private string winPieceKey;
     private int turnsRemaining;
     private int collectedWinPieceCount;
+    private bool isLevelEnded;
 
     public event Action LevelWon;
     public event Action LevelLost;
 
     [Inject]
-    public void Construct(GameField gameField, LevelConfig levelConfig, PieceMappingsConfig pieceMappings)
+    public void Construct(GameField gameField, TurnResolver turnResolver, LevelConfig levelConfig, PieceMappingsConfig pieceMappings)
     {
         this.gameField = gameField;
+        this.turnResolver = turnResolver;
         this.levelConfig = levelConfig;
         this.pieceMappings = pieceMappings;
     }
@@ -30,6 +33,10 @@ public class LevelManager : MonoBehaviour
         turnsRemaining = levelConfig.MaxTurns;
 
         gameField.BuildField(levelConfig, pieceMappings);
+
+        turnResolver.TurnMade += RegisterTurnMade;
+        turnResolver.PiecesCollected += RegisterPieceCollected;
+        turnResolver.TurnResolved += CheckOutcome;
 
         Debug.Log(
             $"Level started: {levelConfig.HorizontalSize}x{levelConfig.VerticalSize}, " +
@@ -42,8 +49,6 @@ public class LevelManager : MonoBehaviour
 
         collectedWinPieceCount += amount;
         Debug.Log($"Collected {collectedWinPieceCount}/{levelConfig.WinPieceAmount} '{winPieceKey}'");
-
-        CheckWinCondition();
     }
 
     public void RegisterTurnMade()
@@ -51,12 +56,20 @@ public class LevelManager : MonoBehaviour
         if (levelConfig.MaxTurns <= 0) return;
 
         turnsRemaining--;
+    }
+
+    public void CheckOutcome()
+    {
+        CheckWinCondition();
         CheckLoseCondition();
     }
 
     private void CheckWinCondition()
     {
-        if (collectedWinPieceCount < levelConfig.WinPieceAmount) return;
+        if (isLevelEnded || collectedWinPieceCount < levelConfig.WinPieceAmount) return;
+
+        isLevelEnded = true;
+        turnResolver.SetInputEnabled(false);
 
         Debug.Log("Level won");
         LevelWon?.Invoke();
@@ -64,7 +77,10 @@ public class LevelManager : MonoBehaviour
 
     private void CheckLoseCondition()
     {
-        if (turnsRemaining > 0) return;
+        if (isLevelEnded || turnsRemaining > 0) return;
+
+        isLevelEnded = true;
+        turnResolver.SetInputEnabled(false);
 
         Debug.Log("Level lost");
         LevelLost?.Invoke();

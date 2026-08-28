@@ -14,5 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pieces.PieceViewMappingConfig
   pieceViewPrefab: {fileID: 8637792393957614909, guid: ff9e7f0f1a8d469418e263af9af1ec5c, type: 3}
   entries:
-  - Key: 
-    Sprite: {fileID: 0}
+  - Key: red_stone
+    Sprite: {fileID: 9123367712174970832, guid: 479784cca27063a41bd62073d27dfe66, type: 3}
+  - Key: green_stone
+    Sprite: {fileID: -6340862040169194755, guid: e0996ee787e91a44ebc9e9648ef7c88e, type: 3}
+  - Key: purple_stone
+    Sprite: {fileID: 6817073038925381041, guid: 8ea04d97c42e86a45ad9ce7d8bd896b7, type: 3}
+  - Key: yellow_stone
+    Sprite: {fileID: -6863528662330569529, guid: 1c8aafc1579380649978c685954faf16, type: 3}
+  - Key: cyan_stone
+    Sprite: {fileID: -8995796157434647951, guid: f1d72f9e87dd75b4f8f0a60221b50b9f, type: 3}
+  - Key: orange_stone
+    Sprite: {fileID: -3632168974263838580, guid: 52728890c408c5f4da05fce4deb5b965, type: 3}
+  - Key: gray_stone
+    Sprite: {fileID: 8786912750155366457, guid: e9bea9ac393f73149991e853154ebba9, type: 3}
+  - Key: blue_stone
+    Sprite: {fileID: -5393387381243016044, guid: 0a24d9cf62d65804b85542f2a2c82d29, type: 3}
+  - Key: dark_stone
+    Sprite: {fileID: 2841740978675582535, guid: 67cfa8887629ef449b994a9cf04191e3, type: 3}

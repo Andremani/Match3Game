@@ -66,7 +66,6 @@ namespace Pieces
 
             if (piece == null) return;
 
-            Debug.Log($"Swipe detected: {piece} -> {direction}");
             piece.ReturnHomeAsync(ReturnDuration).Forget();
             Swiped?.Invoke(piece, direction);
         }

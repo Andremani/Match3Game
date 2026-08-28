@@ -1,4 +1,6 @@
+using System;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using UnityEngine;
 
 namespace Pieces
@@ -14,9 +16,12 @@ namespace Pieces
         public PieceView View { get; }
         public Vector2Int Coordinate { get; set; }
 
+        public event Action<Piece> MatchResolved;
+
         public void SetPositionImmediate(Vector3 worldPosition) => View.SetPosition(worldPosition);
 
-        public UniTask MoveToAsync(Vector3 worldPosition, float duration) => View.MoveAsync(worldPosition, duration);
+        public UniTask MoveToAsync(Vector3 worldPosition, float duration, Ease ease = Ease.Linear) =>
+            View.MoveAsync(worldPosition, duration, ease);
 
         public void SetNudgeOffset(Vector2 offset) => View.SetNudgeOffset(offset);
 
@@ -24,6 +29,13 @@ namespace Pieces
 
         public UniTask PlayCollapseAsync(float duration) => View.PlayCollapseAsync(duration);
 
-        public void Destroy() => Object.Destroy(View.gameObject);
+        public void Destroy() => UnityEngine.Object.Destroy(View.gameObject);
+
+        public virtual async UniTask ResolveMatchAsync(float duration)
+        {
+            await PlayCollapseAsync(duration);
+            Destroy();
+            MatchResolved?.Invoke(this);
+        }
     }
 }

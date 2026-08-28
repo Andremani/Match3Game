@@ -14,6 +14,7 @@ public class GameField
     private readonly GameFieldView gameFieldView;
 
     private Piece[,] pieces;
+    private List<string> colorKeyPool;
 
     public GameField(PieceFactory pieceFactory, GameFieldView gameFieldView)
     {
@@ -32,7 +33,7 @@ public class GameField
         Height = levelConfig.VerticalSize;
         pieces = new Piece[Width, Height];
 
-        List<string> colorKeyPool = levelConfig.MaxRegularPieceTypes > 0
+        colorKeyPool = levelConfig.MaxRegularPieceTypes > 0
             ? pieceMappings.OrderedSymbols
                 .Take(levelConfig.MaxRegularPieceTypes)
                 .Select(symbol => pieceMappings.PieceKeysBySymbol[symbol])
@@ -43,20 +44,38 @@ public class GameField
         {
             for (int x = 0; x < Width; x++)
             {
-                CreatePieceAt(x, y, levelConfig.Map[x, y], colorKeyPool, pieceMappings);
+                CreatePieceAt(x, y, levelConfig.Map[x, y], pieceMappings);
             }
         }
 
         gameFieldView.CenterCamera();
     }
 
+    public bool IsInBounds(Vector2Int coordinate) =>
+        coordinate.x >= 0 && coordinate.x < Width && coordinate.y >= 0 && coordinate.y < Height;
+
     public Piece GetPiece(Vector2Int coordinate) => pieces[coordinate.x, coordinate.y];
 
-    private void CreatePieceAt(int x, int y, char symbol, List<string> colorKeyPool, PieceMappingsConfig pieceMappings)
+    public Vector3 GetWorldPosition(Vector2Int coordinate) => gameFieldView.GetWorldPosition(coordinate);
+
+    public Vector2 CellSize => gameFieldView.CellSize;
+
+    public void SetPiece(Vector2Int coordinate, Piece piece)
+    {
+        pieces[coordinate.x, coordinate.y] = piece;
+        if (piece != null) piece.Coordinate = coordinate;
+    }
+
+    public void RemovePiece(Vector2Int coordinate) => pieces[coordinate.x, coordinate.y] = null;
+
+    public RegularPiece CreateRandomRegularPiece() =>
+        pieceFactory.CreateRandomRegularPiece(colorKeyPool, gameFieldView.PiecesParent);
+
+    private void CreatePieceAt(int x, int y, char symbol, PieceMappingsConfig pieceMappings)
     {
         if (symbol == EmptySymbol || symbol == EmptySymbolAlt) return;
 
-        string key = symbol == RandomSymbol ? PickRandomKey(x, y, colorKeyPool) : pieceMappings.PieceKeysBySymbol[symbol];
+        string key = symbol == RandomSymbol ? PickRandomKey(x, y) : pieceMappings.PieceKeysBySymbol[symbol];
 
         Vector2Int coordinate = new(x, y);
         RegularPiece piece = pieceFactory.CreateRegularPiece(key, gameFieldView.PiecesParent);
@@ -66,7 +85,7 @@ public class GameField
         pieces[x, y] = piece;
     }
 
-    private string PickRandomKey(int x, int y, List<string> colorKeyPool)
+    private string PickRandomKey(int x, int y)
     {
         HashSet<string> forbiddenKeys = new();
 

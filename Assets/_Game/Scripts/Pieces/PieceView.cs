@@ -51,13 +51,13 @@ namespace Pieces
 
         public UniTask ReturnHomeAsync(float duration) => MoveAsync(homePosition, duration);
 
-        public async UniTask MoveAsync(Vector3 targetPosition, float duration)
+        public async UniTask MoveAsync(Vector3 targetPosition, float duration, Ease ease = Ease.Linear)
         {
             homePosition = targetPosition;
             SetMoving(true);
 
             UniTaskCompletionSource completionSource = new();
-            transform.DOMove(targetPosition, duration).OnComplete(() => completionSource.TrySetResult());
+            transform.DOMove(targetPosition, duration).SetEase(ease).OnComplete(() => completionSource.TrySetResult());
             await completionSource.Task;
 
             SetMoving(false);
