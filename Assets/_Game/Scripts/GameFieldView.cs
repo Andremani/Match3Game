@@ -6,15 +6,17 @@ public class GameFieldView : MonoBehaviour
     private const char EmptySymbol = '-';
     private const char EmptySymbolAlt = ' ';
 
-    [SerializeField] private Tilemap tilemap;
-    [SerializeField] private TileBase fieldTile;
+    [SerializeField] private Tilemap maskTilemap;
+    [SerializeField] private Tilemap cellsTilemap;
+    [SerializeField] private TileBase maskTile;
+    [SerializeField] private TileBase cellTile;
     [SerializeField] private Transform piecesParent;
 
     private int fieldWidth;
     private int fieldHeight;
 
     public Transform PiecesParent => piecesParent;
-    public Vector2 CellSize => tilemap.cellSize;
+    public Vector2 CellSize => maskTilemap.cellSize;
 
     private void Awake()
     {
@@ -26,7 +28,8 @@ public class GameFieldView : MonoBehaviour
 
     public void PaintField(char[,] map)
     {
-        tilemap.ClearAllTiles();
+        maskTilemap.ClearAllTiles();
+        cellsTilemap.ClearAllTiles();
 
         fieldWidth = map.GetLength(0);
         fieldHeight = map.GetLength(1);
@@ -37,14 +40,16 @@ public class GameFieldView : MonoBehaviour
             {
                 if (IsEmptySymbol(map[x, y])) continue;
 
-                tilemap.SetTile(ToCellPosition(x, y), fieldTile);
+                maskTilemap.SetTile(ToCellPosition(x, y), maskTile);
+                cellsTilemap.SetTile(ToCellPosition(x, y), cellTile);
             }
         }
 
-        tilemap.CompressBounds();
+        maskTilemap.CompressBounds();
+        cellsTilemap.CompressBounds();
     }
 
-    public Vector3 GetWorldPosition(Vector2Int coordinate) => tilemap.GetCellCenterWorld(ToCellPosition(coordinate.x, coordinate.y));
+    public Vector3 GetWorldPosition(Vector2Int coordinate) => maskTilemap.GetCellCenterWorld(ToCellPosition(coordinate.x, coordinate.y));
 
     public void CenterCamera()
     {
@@ -56,9 +61,9 @@ public class GameFieldView : MonoBehaviour
             return;
         }
 
-        BoundsInt cellBounds = tilemap.cellBounds;
-        Vector3 fieldMin = tilemap.CellToWorld(new Vector3Int(cellBounds.xMin, cellBounds.yMin, 0));
-        Vector3 fieldMax = tilemap.CellToWorld(new Vector3Int(cellBounds.xMax, cellBounds.yMax, 0));
+        BoundsInt cellBounds = maskTilemap.cellBounds;
+        Vector3 fieldMin = maskTilemap.CellToWorld(new Vector3Int(cellBounds.xMin, cellBounds.yMin, 0));
+        Vector3 fieldMax = maskTilemap.CellToWorld(new Vector3Int(cellBounds.xMax, cellBounds.yMax, 0));
         Vector3 fieldCenter = (fieldMin + fieldMax) * 0.5f;
 
         camera.transform.position = new Vector3(fieldCenter.x, fieldCenter.y, camera.transform.position.z);
