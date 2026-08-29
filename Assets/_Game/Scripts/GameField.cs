@@ -124,41 +124,46 @@ public class GameField
     {
         if (PieceMappingsConfig.IsEmptySymbol(symbol)) return;
 
-        string key;
+        RegularPiece piece;
         if(symbol == PieceMappingsConfig.RandomSymbol)
         {
-            key = PickRandomRegularPieceKeyWithoutMatch(coordinate);
+            piece = CreateRandomRegularPieceWithoutMatch(coordinate);
         }
         else
         {
-            key = pieceMappings.PieceKeysBySymbol[symbol];   
+            string key = pieceMappings.PieceKeysBySymbol[symbol];
+            piece = pieceFactory.CreateRegularPiece(key, gameFieldView.PiecesParent);
         }
 
-        RegularPiece piece = pieceFactory.CreateRegularPiece(key, gameFieldView.PiecesParent);
         piece.Coordinate = coordinate;
         piece.SetPositionImmediate(gameFieldView.GetWorldPosition(coordinate));
 
         cells[coordinate].Piece = piece;
     }
 
-    private string PickRandomRegularPieceKeyWithoutMatch(Vector2Int coordinate)
+    private RegularPiece CreateRandomRegularPieceWithoutMatch(Vector2Int coordinate)
     {
+        // MatchChecker reads pieces straight from the field, so a candidate has to actually
+        // be placed at the cell before CheckAt can tell whether it would form a match.
         List<string> candidatesKeyPool = new(regularPiecesKeyPool);
-        string chosenKey;
-        bool hasMatch = false;
-        
-        do
-        {
-            chosenKey = candidatesKeyPool[Random.Range(0, candidatesKeyPool.Count)];
-            candidatesKeyPool.Remove(chosenKey);
 
-            if(matchChecker.CheckAt(coordinate).Count > 0)
+        while (true)
+        {
+            string key = candidatesKeyPool[Random.Range(0, candidatesKeyPool.Count)];
+            candidatesKeyPool.Remove(key);
+
+            RegularPiece piece = pieceFactory.CreateRegularPiece(key, gameFieldView.PiecesParent);
+            cells[coordinate].Piece = piece;
+
+            bool hasMatch = matchChecker.CheckAt(coordinate).Count > 0;
+            if (!hasMatch || candidatesKeyPool.Count == 0)
             {
-                hasMatch = true;
+                cells[coordinate].Piece = null;
+                return piece;
             }
 
-        } while(hasMatch & candidatesKeyPool.Count > 0);
-
-        return chosenKey;
+            cells[coordinate].Piece = null;
+            piece.Destroy();
+        }
     }
 }
