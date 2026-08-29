@@ -22,27 +22,9 @@ public class FallManager
     public async UniTask ResolveFallsAsync(List<Vector2Int> emptyCells)
     {
         List<UniTask> fallTasks = new();
-        List<Vector2Int> lowestEmptyCellsInColumns = new();
+        IEnumerable<int> affectedColumns = emptyCells.Select(c => c.x).Distinct();
 
-        foreach(var cellCoordinate in emptyCells)
-        {
-            Vector2Int existing = lowestEmptyCellsInColumns.FirstOrDefault(c => c.x == cellCoordinate.x);
-
-            if(existing == null)
-            {
-                lowestEmptyCellsInColumns.Add(cellCoordinate);
-            }
-            else
-            {
-                if(cellCoordinate.y > existing.y)
-                {
-                    lowestEmptyCellsInColumns.Remove(existing);
-                    lowestEmptyCellsInColumns.Add(cellCoordinate);
-                }
-            }
-        }
-
-        for (int x = 0; x < gameField.Width; x++)
+        foreach (int x in affectedColumns)
         {
             fallTasks.AddRange(ResolveColumn(x));
         }
@@ -53,11 +35,21 @@ public class FallManager
 
     private List<UniTask> ResolveColumn(int x)
     {
-        List<Piece> existingPieces = new();
+        List<Vector2Int> columnCells = new();
+        int cellsInColumn = gameField.CellsAmountByColumn.TryGetValue(x, out int count) ? count : 0;
 
-        for (int y = gameField.Height - 1; y >= 0; y--)
+        for (int y = 0; y < gameField.Height && columnCells.Count < cellsInColumn; y++)
         {
             Vector2Int coordinate = new(x, y);
+            if (gameField.IsValidPosition(coordinate))
+            {
+                columnCells.Add(coordinate);
+            }
+        }
+
+        List<Piece> existingPieces = new();
+        foreach (var coordinate in columnCells)
+        {
             Piece piece = gameField.GetPiece(coordinate);
             if (piece == null) continue;
 
@@ -65,25 +57,30 @@ public class FallManager
             gameField.RemovePiece(coordinate);
         }
 
-        int emptyCount = gameField.Height - existingPieces.Count;
+        int emptyCount = columnCells.Count - existingPieces.Count;
         List<UniTask> fallTasks = new();
 
         for (int i = 0; i < existingPieces.Count; i++)
         {
-            Vector2Int targetCoordinate = new(x, emptyCount + i);
+            Vector2Int targetCoordinate = columnCells[emptyCount + i];
             fallTasks.Add(MovePieceAsync(existingPieces[i], targetCoordinate));
         }
 
-        for (int i = 0; i < emptyCount; i++)
+        if (emptyCount > 0)
         {
-            Vector2Int targetCoordinate = new(x, i);
-            Vector2Int spawnCoordinate = new(x, i - emptyCount);
+            int topRow = columnCells[0].y;
 
-            RegularPiece piece = gameField.CreateRandomRegularPiece();
-            piece.Coordinate = spawnCoordinate;
-            piece.SetPositionImmediate(gameField.GetWorldPosition(spawnCoordinate));
+            for (int i = 0; i < emptyCount; i++)
+            {
+                Vector2Int targetCoordinate = columnCells[i];
+                Vector2Int spawnCoordinate = new(x, topRow - emptyCount + i);
 
-            fallTasks.Add(MovePieceAsync(piece, targetCoordinate));
+                RegularPiece piece = gameField.CreateRandomRegularPiece();
+                piece.Coordinate = spawnCoordinate;
+                piece.SetPositionImmediate(gameField.GetWorldPosition(spawnCoordinate));
+
+                fallTasks.Add(MovePieceAsync(piece, targetCoordinate));
+            }
         }
 
         return fallTasks;
@@ -96,7 +93,9 @@ public class FallManager
         if (piece.Coordinate != targetCoordinate)
         {
             float distance = Vector3.Distance(piece.View.transform.position, targetWorldPosition);
-            await piece.MoveToAsync(targetWorldPosition, distance / FallSpeed);
+            UniTask moveTask = piece.MoveToAsync(targetWorldPosition, distance / FallSpeed);
+            piece.View.MaskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+            await moveTask;
         }
 
         gameField.SetPiece(targetCoordinate, piece);

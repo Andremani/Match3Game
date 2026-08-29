@@ -58,7 +58,9 @@ public class GameField
                 {
                     Vector2Int coordinate = new Vector2Int(x,y);
                     cells.Add(coordinate, new Cell(coordinate));
-                    CellsAmountByColumn.Add(x, 1);
+                    
+                    CellsAmountByColumn.TryGetValue(x, out int current);
+                    CellsAmountByColumn[x] = current + 1;
                 }
             }
         }

@@ -19,6 +19,17 @@ namespace Pieces
         private SpriteMaskInteraction baseMaskInteraction;
 
         public Piece Piece { get; set; }
+        public SpriteMaskInteraction MaskInteraction 
+        {
+            get
+            {
+                return spriteRenderer.maskInteraction;
+            }
+            set
+            {
+                spriteRenderer.maskInteraction = value;
+            }
+        }
 
         private void Awake()
         {
