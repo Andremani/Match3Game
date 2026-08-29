@@ -6,108 +6,157 @@ using UnityEngine;
 
 public class GameField
 {
-    private const char EmptySymbol = '-';
-    private const char EmptySymbolAlt = ' ';
-    private const char RandomSymbol = '*';
-
     private readonly PieceFactory pieceFactory;
     private readonly GameFieldView gameFieldView;
+    private readonly MatchChecker matchChecker;
 
-    private Piece[,] pieces;
-    private List<string> colorKeyPool;
+    private Dictionary<Vector2Int, Cell> cells;
+    private List<string> regularPiecesKeyPool = new();
+    private int width;
+    private int height;
 
-    public GameField(PieceFactory pieceFactory, GameFieldView gameFieldView)
+    public GameField(PieceFactory pieceFactory, GameFieldView gameFieldView, MatchChecker matchChecker)
     {
         this.pieceFactory = pieceFactory;
         this.gameFieldView = gameFieldView;
+        this.matchChecker = matchChecker;
+        matchChecker.Init(this);
     }
 
-    public int Width { get; private set; }
-    public int Height { get; private set; }
+    public int Width => width;
+    public int Height => height;
+    public Dictionary<int, int> CellsAmountByColumn = new();
 
     public void BuildField(LevelConfig levelConfig, PieceMappingsConfig pieceMappings)
     {
-        gameFieldView.PaintField(levelConfig.Map);
-
-        Width = levelConfig.HorizontalSize;
-        Height = levelConfig.VerticalSize;
-        pieces = new Piece[Width, Height];
-
-        colorKeyPool = levelConfig.MaxRegularPieceTypes > 0
-            ? pieceMappings.OrderedSymbols
+        width = levelConfig.HorizontalSize;
+        height = levelConfig.VerticalSize;
+        if(levelConfig.MaxRegularPieceTypes > 0)
+        {
+            regularPiecesKeyPool = pieceMappings.OrderedSymbols
                 .Take(levelConfig.MaxRegularPieceTypes)
                 .Select(symbol => pieceMappings.PieceKeysBySymbol[symbol])
-                .ToList()
-            : new List<string>();
+                .ToList();
+        }
 
+        cells = CreateCells(levelConfig);
+        gameFieldView.PaintField(cells, height, width);
+
+        FillCells(levelConfig.Map, pieceMappings);
+        gameFieldView.CenterCamera();
+    }
+
+    private Dictionary<Vector2Int, Cell> CreateCells(LevelConfig levelConfig)
+    {
+        Dictionary<Vector2Int, Cell> cells = new();
         for (int y = 0; y < Height; y++)
         {
             for (int x = 0; x < Width; x++)
             {
-                CreatePieceAt(x, y, levelConfig.Map[x, y], pieceMappings);
+                char symbol = levelConfig.Map[x, y];
+                if (!PieceMappingsConfig.IsEmptySymbol(symbol))
+                {
+                    Vector2Int coordinate = new Vector2Int(x,y);
+                    cells.Add(coordinate, new Cell(coordinate));
+                    CellsAmountByColumn.Add(x, 1);
+                }
+            }
+        }
+        return cells;
+    }
+
+    private void FillCells(char[,] map, PieceMappingsConfig pieceMappings)
+    {
+        //Predefined pieces first, random after - for proper match-cheking
+
+        foreach(var cell in cells.Values)
+        {
+            char symbol = map[cell.Coordinate.x, cell.Coordinate.y];
+            if (PieceMappingsConfig.RandomSymbol != symbol)
+            {
+                CreatePieceAt(cell.Coordinate, symbol, pieceMappings);
             }
         }
 
-        gameFieldView.CenterCamera();
+        foreach(var cell in cells.Values)
+        {
+            if (cell.Piece != null) continue;
+
+            char symbol = map[cell.Coordinate.x, cell.Coordinate.y];
+            if (PieceMappingsConfig.RandomSymbol == symbol)
+            {
+                CreatePieceAt(cell.Coordinate, symbol, pieceMappings);
+            }   
+        }
     }
 
-    public bool IsInBounds(Vector2Int coordinate) =>
-        coordinate.x >= 0 && coordinate.x < Width && coordinate.y >= 0 && coordinate.y < Height;
-
-    public Piece GetPiece(Vector2Int coordinate) => pieces[coordinate.x, coordinate.y];
-
+    public bool IsValidPosition(Vector2Int coordinate) => cells.ContainsKey(coordinate);
+    
     public Vector3 GetWorldPosition(Vector2Int coordinate) => gameFieldView.GetWorldPosition(coordinate);
 
     public Vector2 CellSize => gameFieldView.CellSize;
 
+    public RegularPiece CreateRandomRegularPiece() =>
+        pieceFactory.CreateRandomRegularPiece(regularPiecesKeyPool, gameFieldView.PiecesParent);
+
+    public Piece GetPiece(Vector2Int coordinate)
+    {
+        if(!IsValidPosition(coordinate)) return null;
+        return cells[coordinate].Piece;
+    }
+
     public void SetPiece(Vector2Int coordinate, Piece piece)
     {
-        pieces[coordinate.x, coordinate.y] = piece;
+        if(!IsValidPosition(coordinate)) return;
+        cells[coordinate].Piece = piece;
         if (piece != null) piece.Coordinate = coordinate;
     }
 
-    public void RemovePiece(Vector2Int coordinate) => pieces[coordinate.x, coordinate.y] = null;
-
-    public RegularPiece CreateRandomRegularPiece() =>
-        pieceFactory.CreateRandomRegularPiece(colorKeyPool, gameFieldView.PiecesParent);
-
-    private void CreatePieceAt(int x, int y, char symbol, PieceMappingsConfig pieceMappings)
+    public void RemovePiece(Vector2Int coordinate)
     {
-        if (symbol == EmptySymbol || symbol == EmptySymbolAlt) return;
+        if(!IsValidPosition(coordinate)) return;
+        cells[coordinate].Piece = null;
+    }
 
-        string key = symbol == RandomSymbol ? PickRandomKey(x, y) : pieceMappings.PieceKeysBySymbol[symbol];
+    private void CreatePieceAt(Vector2Int coordinate, char symbol, PieceMappingsConfig pieceMappings)
+    {
+        if (PieceMappingsConfig.IsEmptySymbol(symbol)) return;
 
-        Vector2Int coordinate = new(x, y);
+        string key;
+        if(symbol == PieceMappingsConfig.RandomSymbol)
+        {
+            key = PickRandomRegularPieceKeyWithoutMatch(coordinate);
+        }
+        else
+        {
+            key = pieceMappings.PieceKeysBySymbol[symbol];   
+        }
+
         RegularPiece piece = pieceFactory.CreateRegularPiece(key, gameFieldView.PiecesParent);
         piece.Coordinate = coordinate;
         piece.SetPositionImmediate(gameFieldView.GetWorldPosition(coordinate));
 
-        pieces[x, y] = piece;
+        cells[coordinate].Piece = piece;
     }
 
-    private string PickRandomKey(int x, int y)
+    private string PickRandomRegularPieceKeyWithoutMatch(Vector2Int coordinate)
     {
-        HashSet<string> forbiddenKeys = new();
+        List<string> candidatesKeyPool = new(regularPiecesKeyPool);
+        string chosenKey;
+        bool hasMatch = false;
+        
+        do
+        {
+            chosenKey = candidatesKeyPool[Random.Range(0, candidatesKeyPool.Count)];
+            candidatesKeyPool.Remove(chosenKey);
 
-        string leftMatchKey = GetMatchingPairKey(x - 1, y, x - 2, y);
-        if (leftMatchKey != null) forbiddenKeys.Add(leftMatchKey);
+            if(matchChecker.CheckAt(coordinate).Count > 0)
+            {
+                hasMatch = true;
+            }
 
-        string topMatchKey = GetMatchingPairKey(x, y - 1, x, y - 2);
-        if (topMatchKey != null) forbiddenKeys.Add(topMatchKey);
+        } while(hasMatch & candidatesKeyPool.Count > 0);
 
-        List<string> candidates = colorKeyPool.Where(key => !forbiddenKeys.Contains(key)).ToList();
-        if (candidates.Count == 0) candidates = colorKeyPool;
-
-        return candidates[Random.Range(0, candidates.Count)];
-    }
-
-    private string GetMatchingPairKey(int firstX, int firstY, int secondX, int secondY)
-    {
-        if (firstX < 0 || firstY < 0 || secondX < 0 || secondY < 0) return null;
-
-        if (pieces[firstX, firstY] is not RegularPiece first) return null;
-        if (pieces[secondX, secondY] is not RegularPiece second) return null;
-
-        return first.Key == second.Key ? first.Key : null;
+        return chosenKey;
     }
 }

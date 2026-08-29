@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using Pieces;
 using UnityEngine;
 
@@ -12,32 +12,41 @@ public class MatchChecker
         Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
     };
 
-    private readonly GameField gameField;
+    private GameField gameField;
 
-    public MatchChecker(GameField gameField)
+    public void Init(GameField gameField)
     {
         this.gameField = gameField;
     }
 
-    public event Action<IReadOnlyList<MatchGroup>> MatchSucceeded;
-    public event Action MatchFailed;
+    public IReadOnlyList<MatchGroup> CheckNeighbouringPair(Vector2Int firstCoordinate, Vector2Int secondCoordinate)
+    {
+        IReadOnlyList<MatchGroup> matches;
+        Piece firstPiece = gameField.GetPiece(firstCoordinate);
+        Piece secondPiece = gameField.GetPiece(secondCoordinate);
+
+        if(Piece.AreSame(firstPiece, secondPiece))
+        {
+            matches = CheckAt(firstCoordinate);
+        }
+        else
+        {
+            IReadOnlyList<MatchGroup> matches1 = CheckAt(firstCoordinate);
+            IReadOnlyList<MatchGroup> matches2 = CheckAt(secondCoordinate);
+            matches = matches1.Concat(matches2).ToList();
+        }
+
+        return matches;
+    }
 
     public IReadOnlyList<MatchGroup> CheckAt(Vector2Int coordinate)
     {
-        return Report(FindAllMatches().FindAll(group => Contains(group, coordinate)));
+        return FindAllMatches().FindAll(group => Contains(group, coordinate));
     }
 
     public IReadOnlyList<MatchGroup> CheckWholeField()
     {
-        return Report(FindAllMatches());
-    }
-
-    private IReadOnlyList<MatchGroup> Report(List<MatchGroup> groups)
-    {
-        if (groups.Count > 0) MatchSucceeded?.Invoke(groups);
-        else MatchFailed?.Invoke();
-
-        return groups;
+        return FindAllMatches();
     }
 
     private static bool Contains(MatchGroup group, Vector2Int coordinate)
@@ -202,4 +211,20 @@ public class MatchChecker
     }
 
     private string GetKey(Vector2Int coordinate) => (gameField.GetPiece(coordinate) as RegularPiece)?.Key;
+
+    
+    //Union (merge of first and second exluding duplicates)
+
+    // private static List<MatchGroup> DeduceGroups(IReadOnlyList<MatchGroup> first, IReadOnlyList<MatchGroup> second)
+    // {
+    //     List<MatchGroup> groups = new(first);
+
+    //     foreach (MatchGroup group in second)
+    //     {
+    //         bool overlaps = groups.Any(existing => existing.Cells.Intersect(group.Cells).Any());
+    //         if (!overlaps) groups.Add(group);
+    //     }
+
+    //     return groups;
+    // }
 }

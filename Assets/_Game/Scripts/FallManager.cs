@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using Pieces;
 using UnityEngine;
@@ -18,9 +19,28 @@ public class FallManager
     public event Action<Piece> PieceRegistered;
     public event Action FallsCompleted;
 
-    public async UniTask ResolveFallsAsync()
+    public async UniTask ResolveFallsAsync(List<Vector2Int> emptyCells)
     {
         List<UniTask> fallTasks = new();
+        List<Vector2Int> lowestEmptyCellsInColumns = new();
+
+        foreach(var cellCoordinate in emptyCells)
+        {
+            Vector2Int existing = lowestEmptyCellsInColumns.FirstOrDefault(c => c.x == cellCoordinate.x);
+
+            if(existing == null)
+            {
+                lowestEmptyCellsInColumns.Add(cellCoordinate);
+            }
+            else
+            {
+                if(cellCoordinate.y > existing.y)
+                {
+                    lowestEmptyCellsInColumns.Remove(existing);
+                    lowestEmptyCellsInColumns.Add(cellCoordinate);
+                }
+            }
+        }
 
         for (int x = 0; x < gameField.Width; x++)
         {
@@ -35,7 +55,7 @@ public class FallManager
     {
         List<Piece> existingPieces = new();
 
-        for (int y = 0; y < gameField.Height; y++)
+        for (int y = gameField.Height - 1; y >= 0; y--)
         {
             Vector2Int coordinate = new(x, y);
             Piece piece = gameField.GetPiece(coordinate);

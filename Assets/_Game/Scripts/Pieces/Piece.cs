@@ -37,5 +37,26 @@ namespace Pieces
             Destroy();
             MatchResolved?.Invoke(this);
         }
+
+        public static bool AreSame(Piece firstPiece, Piece secondPiece)
+        {
+            bool areSame = false;
+
+            if(firstPiece is RegularPiece firstRegular && secondPiece is RegularPiece secondRegular)
+            {
+                if(firstRegular.Key == secondRegular.Key)
+                {
+                    areSame = true;
+                }
+            }
+            else
+            {
+                if(firstPiece.GetType() == secondPiece.GetType())
+                {
+                    areSame = true;
+                }
+            }
+            return areSame;
+        }
     }
 }

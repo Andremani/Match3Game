@@ -1,55 +1,41 @@
+using System.Collections.Generic;
+using Configuration;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class GameFieldView : MonoBehaviour
 {
-    private const char EmptySymbol = '-';
-    private const char EmptySymbolAlt = ' ';
-
     [SerializeField] private Tilemap maskTilemap;
     [SerializeField] private Tilemap cellsTilemap;
     [SerializeField] private TileBase maskTile;
     [SerializeField] private TileBase cellTile;
     [SerializeField] private Transform piecesParent;
 
-    private int fieldWidth;
     private int fieldHeight;
+    private int fieldWidth;
 
     public Transform PiecesParent => piecesParent;
     public Vector2 CellSize => maskTilemap.cellSize;
 
-    private void Awake()
+    public void PaintField(Dictionary<Vector2Int, Cell> cells, int fieldHeight, int fieldWidth)
     {
-        if (piecesParent == null)
-        {
-            Debug.LogError("GameFieldView: piecesParent is not assigned.");
-        }
-    }
+        this.fieldHeight = fieldHeight;
+        this.fieldWidth = fieldWidth;
 
-    public void PaintField(char[,] map)
-    {
         maskTilemap.ClearAllTiles();
         cellsTilemap.ClearAllTiles();
 
-        fieldWidth = map.GetLength(0);
-        fieldHeight = map.GetLength(1);
-
-        for (int y = 0; y < fieldHeight; y++)
+        foreach (var cell in cells.Values)
         {
-            for (int x = 0; x < fieldWidth; x++)
-            {
-                if (IsEmptySymbol(map[x, y])) continue;
-
-                maskTilemap.SetTile(ToCellPosition(x, y), maskTile);
-                cellsTilemap.SetTile(ToCellPosition(x, y), cellTile);
-            }
+            maskTilemap.SetTile(ToCellPosition(cell.Coordinate), maskTile);
+            cellsTilemap.SetTile(ToCellPosition(cell.Coordinate), cellTile);  
         }
 
         maskTilemap.CompressBounds();
         cellsTilemap.CompressBounds();
     }
 
-    public Vector3 GetWorldPosition(Vector2Int coordinate) => maskTilemap.GetCellCenterWorld(ToCellPosition(coordinate.x, coordinate.y));
+    public Vector3 GetWorldPosition(Vector2Int coordinate) => maskTilemap.GetCellCenterWorld(ToCellPosition(coordinate));
 
     public void CenterCamera()
     {
@@ -69,7 +55,6 @@ public class GameFieldView : MonoBehaviour
         camera.transform.position = new Vector3(fieldCenter.x, fieldCenter.y, camera.transform.position.z);
     }
 
+    private Vector3Int ToCellPosition(Vector2Int coordinates) => ToCellPosition(coordinates.x, coordinates.y);
     private Vector3Int ToCellPosition(int x, int y) => new(x, fieldHeight - 1 - y, 0);
-
-    private static bool IsEmptySymbol(char symbol) => symbol == EmptySymbol || symbol == EmptySymbolAlt;
 }

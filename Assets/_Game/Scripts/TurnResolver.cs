@@ -40,6 +40,9 @@ public class TurnResolver
     public event Action<string, int> PiecesCollected;
     public event Action TurnResolved;
 
+    public event Action<IReadOnlyList<MatchGroup>> MatchSucceeded;
+    public event Action MatchFailed;
+
     public void SetInputEnabled(bool enabled) => isInputEnabled = enabled;
 
     private async void OnSwiped(Piece piece, SwipeDirection direction)
@@ -49,7 +52,7 @@ public class TurnResolver
         Vector2Int fromCoordinate = piece.Coordinate;
         Vector2Int toCoordinate = fromCoordinate + DirectionOffsets[direction];
 
-        if (!gameField.IsInBounds(toCoordinate)) return;
+        if (!gameField.IsValidPosition(toCoordinate)) return;
 
         Piece otherPiece = gameField.GetPiece(toCoordinate);
         if (otherPiece == null) return;
@@ -58,12 +61,16 @@ public class TurnResolver
 
         await SwapAsync(piece, fromCoordinate, otherPiece, toCoordinate);
 
-        List<MatchGroup> matches = DeduceGroups(
-            matchChecker.CheckAt(fromCoordinate),
-            matchChecker.CheckAt(toCoordinate));
+        IReadOnlyList<MatchGroup> matches = matchChecker.CheckNeighbouringPair(fromCoordinate, toCoordinate);
 
-        if (matches.Count == 0)
+        if (matches.Count > 0)
         {
+            MatchSucceeded?.Invoke(matches);
+        }
+        else
+        {
+            MatchFailed?.Invoke();
+
             await SwapAsync(piece, toCoordinate, otherPiece, fromCoordinate);
             isBusy = false;
             return;
@@ -73,9 +80,18 @@ public class TurnResolver
 
         while (matches.Count > 0)
         {
-            await RemoveMatchesAsync(matches);
-            await fallManager.ResolveFallsAsync();
-            matches = matchChecker.CheckWholeField().ToList();
+            List<Vector2Int> emptyCells = await RemoveMatchesAsync(matches);
+            await fallManager.ResolveFallsAsync(emptyCells);
+            matches = matchChecker.CheckWholeField();
+
+            if (matches.Count > 0)
+            {
+                MatchSucceeded?.Invoke(matches);
+            }
+            else
+            {
+                MatchFailed?.Invoke();
+            }
         }
 
         TurnResolved?.Invoke();
@@ -92,10 +108,11 @@ public class TurnResolver
             secondPiece.MoveToAsync(gameField.GetWorldPosition(firstCoordinate), SwapDuration));
     }
 
-    private async UniTask RemoveMatchesAsync(List<MatchGroup> matches)
+    private async UniTask<List<Vector2Int>> RemoveMatchesAsync(IReadOnlyList<MatchGroup> matches)
     {
         Dictionary<string, int> collectedAmounts = new();
         List<Piece> pieces = new();
+        List<Vector2Int> emptyCells = new();
 
         foreach (MatchGroup group in matches)
         {
@@ -110,6 +127,7 @@ public class TurnResolver
 
         void OnMatchResolved(Piece piece)
         {
+            emptyCells.Add(piece.Coordinate);
             gameField.RemovePiece(piece.Coordinate);
 
             string key = (piece as RegularPiece)?.Key;
@@ -135,18 +153,7 @@ public class TurnResolver
         {
             PiecesCollected?.Invoke(key, amount);
         }
-    }
 
-    private static List<MatchGroup> DeduceGroups(IReadOnlyList<MatchGroup> first, IReadOnlyList<MatchGroup> second)
-    {
-        List<MatchGroup> groups = new(first);
-
-        foreach (MatchGroup group in second)
-        {
-            bool overlaps = groups.Any(existing => existing.Cells.Intersect(group.Cells).Any());
-            if (!overlaps) groups.Add(group);
-        }
-
-        return groups;
+        return emptyCells;
     }
 }
