@@ -11,7 +11,7 @@ public class GameField
     private readonly MatchChecker matchChecker;
 
     private Dictionary<Vector2Int, Cell> cells;
-    private List<string> regularPiecesKeyPool = new();
+    private List<string> regularPiecesTypePool = new();
     private int width;
     private int height;
 
@@ -33,7 +33,7 @@ public class GameField
         height = levelConfig.VerticalSize;
         if(levelConfig.MaxRegularPieceTypes > 0)
         {
-            regularPiecesKeyPool = pieceMappings.OrderedSymbols
+            regularPiecesTypePool = pieceMappings.OrderedSymbols
                 .Take(levelConfig.MaxRegularPieceTypes)
                 .Select(symbol => pieceMappings.PieceKeysBySymbol[symbol])
                 .ToList();
@@ -58,7 +58,7 @@ public class GameField
                 {
                     Vector2Int coordinate = new Vector2Int(x,y);
                     cells.Add(coordinate, new Cell(coordinate));
-                    
+
                     CellsAmountByColumn.TryGetValue(x, out int current);
                     CellsAmountByColumn[x] = current + 1;
                 }
@@ -99,7 +99,7 @@ public class GameField
     public Vector2 CellSize => gameFieldView.CellSize;
 
     public RegularPiece CreateRandomRegularPiece() =>
-        pieceFactory.CreateRandomRegularPiece(regularPiecesKeyPool, gameFieldView.PiecesParent);
+        pieceFactory.CreateRandomRegularPiece(regularPiecesTypePool, gameFieldView.PiecesParent);
 
     public Piece GetPiece(Vector2Int coordinate)
     {
@@ -124,46 +124,41 @@ public class GameField
     {
         if (PieceMappingsConfig.IsEmptySymbol(symbol)) return;
 
-        RegularPiece piece;
+        string pieceTypeToCreate;
         if(symbol == PieceMappingsConfig.RandomSymbol)
         {
-            piece = CreateRandomRegularPieceWithoutMatch(coordinate);
+            pieceTypeToCreate = PickRandomRegularPieceKeyWithoutMatch(coordinate);
         }
         else
         {
-            string key = pieceMappings.PieceKeysBySymbol[symbol];
-            piece = pieceFactory.CreateRegularPiece(key, gameFieldView.PiecesParent);
+            pieceTypeToCreate = pieceMappings.PieceKeysBySymbol[symbol];
         }
 
+        RegularPiece piece = pieceFactory.CreateRegularPiece(pieceTypeToCreate, gameFieldView.PiecesParent);
         piece.Coordinate = coordinate;
         piece.SetPositionImmediate(gameFieldView.GetWorldPosition(coordinate));
 
         cells[coordinate].Piece = piece;
     }
 
-    private RegularPiece CreateRandomRegularPieceWithoutMatch(Vector2Int coordinate)
+    private string PickRandomRegularPieceKeyWithoutMatch(Vector2Int coordinate)
     {
-        // MatchChecker reads pieces straight from the field, so a candidate has to actually
-        // be placed at the cell before CheckAt can tell whether it would form a match.
-        List<string> candidatesKeyPool = new(regularPiecesKeyPool);
+        List<string> candidatesTypePool = new(regularPiecesTypePool);
+        string chosenType;
+        bool hasMatch = false;
 
-        while (true)
+        do
         {
-            string key = candidatesKeyPool[Random.Range(0, candidatesKeyPool.Count)];
-            candidatesKeyPool.Remove(key);
+            chosenType = candidatesTypePool[Random.Range(0, candidatesTypePool.Count)];
+            candidatesTypePool.Remove(chosenType);
 
-            RegularPiece piece = pieceFactory.CreateRegularPiece(key, gameFieldView.PiecesParent);
-            cells[coordinate].Piece = piece;
-
-            bool hasMatch = matchChecker.CheckAt(coordinate).Count > 0;
-            if (!hasMatch || candidatesKeyPool.Count == 0)
+            if(matchChecker.CheckAt(coordinate, chosenType).Count > 0)
             {
-                cells[coordinate].Piece = null;
-                return piece;
+                hasMatch = true;
             }
 
-            cells[coordinate].Piece = null;
-            piece.Destroy();
-        }
+        } while (hasMatch & candidatesTypePool.Count > 0);
+
+        return chosenType;
     }
 }

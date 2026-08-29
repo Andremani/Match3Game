@@ -7,6 +7,8 @@ namespace Pieces
 {
     public abstract class Piece
     {
+        public virtual string Key => GetType().Name;
+
         protected Piece(PieceView view)
         {
             View = view;
@@ -38,25 +40,8 @@ namespace Pieces
             MatchResolved?.Invoke(this);
         }
 
-        public static bool AreSame(Piece firstPiece, Piece secondPiece)
-        {
-            bool areSame = false;
+        public static bool AreSame(Piece firstPiece, Piece secondPiece) => firstPiece.Key == secondPiece.Key;
 
-            if(firstPiece is RegularPiece firstRegular && secondPiece is RegularPiece secondRegular)
-            {
-                if(firstRegular.Key == secondRegular.Key)
-                {
-                    areSame = true;
-                }
-            }
-            else
-            {
-                if(firstPiece.GetType() == secondPiece.GetType())
-                {
-                    areSame = true;
-                }
-            }
-            return areSame;
-        }
+        public static bool AreSame(Piece piece, string key) => piece != null && piece.Key == key;
     }
 }

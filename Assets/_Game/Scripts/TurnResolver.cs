@@ -130,11 +130,11 @@ public class TurnResolver
             emptyCells.Add(piece.Coordinate);
             gameField.RemovePiece(piece.Coordinate);
 
-            string key = (piece as RegularPiece)?.Key;
-            if (key == null) return;
+            string regularPieceType = (piece as RegularPiece)?.RegularPieceType;
+            if (regularPieceType == null) return;
 
-            collectedAmounts.TryGetValue(key, out int amount);
-            collectedAmounts[key] = amount + 1;
+            collectedAmounts.TryGetValue(regularPieceType, out int amount);
+            collectedAmounts[regularPieceType] = amount + 1;
         }
 
         foreach (Piece piece in pieces)

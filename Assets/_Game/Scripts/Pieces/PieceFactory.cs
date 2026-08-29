@@ -14,18 +14,18 @@ namespace Pieces
             this.gameFieldView = gameFieldView;
         }
 
-        public RegularPiece CreateRegularPiece(string key, Transform parent)
+        public RegularPiece CreateRegularPiece(string regularPieceType, Transform parent)
         {
             PieceView view = Object.Instantiate(viewMapping.PieceViewPrefab, parent);
             view.Initialize(gameFieldView.CellSize);
-            view.SetSprite(viewMapping.GetSprite(key));
-            return new RegularPiece(view, key);
+            view.SetSprite(viewMapping.GetSprite(regularPieceType));
+            return new RegularPiece(view, regularPieceType);
         }
 
-        public RegularPiece CreateRandomRegularPiece(IReadOnlyList<string> allowedKeys, Transform parent)
+        public RegularPiece CreateRandomRegularPiece(IReadOnlyList<string> allowedRegularPieceTypes, Transform parent)
         {
-            string key = allowedKeys[Random.Range(0, allowedKeys.Count)];
-            return CreateRegularPiece(key, parent);
+            string regularPieceType = allowedRegularPieceTypes[Random.Range(0, allowedRegularPieceTypes.Count)];
+            return CreateRegularPiece(regularPieceType, parent);
         }
     }
 }

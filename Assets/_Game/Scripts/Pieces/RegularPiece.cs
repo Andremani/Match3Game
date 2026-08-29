@@ -2,11 +2,13 @@ namespace Pieces
 {
     public class RegularPiece : Piece
     {
-        public RegularPiece(PieceView view, string key) : base(view)
+        public override string Key => RegularPieceType;
+        
+        public RegularPiece(PieceView view, string regularPieceType) : base(view)
         {
-            Key = key;
+            RegularPieceType = regularPieceType;
         }
 
-        public string Key { get; }
+        public string RegularPieceType { get; }
     }
 }

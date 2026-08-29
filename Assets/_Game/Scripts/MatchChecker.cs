@@ -39,9 +39,38 @@ public class MatchChecker
         return matches;
     }
 
-    public IReadOnlyList<MatchGroup> CheckAt(Vector2Int coordinate)
+    public IReadOnlyList<MatchGroup> CheckAt(Vector2Int coordinate) => CheckAt(coordinate, GetKey(coordinate));
+
+    // Variant for a piece that isn't on the field yet - lets callers (e.g. initial fill) test a
+    // candidate key at a coordinate without actually placing anything there first.
+    public IReadOnlyList<MatchGroup> CheckAt(Vector2Int coordinate, string key)
     {
-        return FindAllMatches().FindAll(group => Contains(group, coordinate));
+        List<MatchGroup> groups = new();
+        if (key == null) return groups;
+
+        List<Vector2Int> horizontalRun = ExpandLine(coordinate, key, horizontal: true);
+        List<Vector2Int> verticalRun = ExpandLine(coordinate, key, horizontal: false);
+
+        List<Vector2Int> lineCells = new();
+        if (horizontalRun.Count >= MinLineLength) lineCells.AddRange(horizontalRun);
+        if (verticalRun.Count >= MinLineLength) lineCells.AddRange(verticalRun);
+
+        if (lineCells.Count > 0)
+        {
+            List<Vector2Int> cells = lineCells.Distinct().ToList();
+            MatchShape shape = ClassifyShape(cells);
+
+            // A pure 2x2 square isn't an actionable match yet - there's no "plane" booster
+            // to spawn, so it's treated the same as no match at all until that's built.
+            if (shape != MatchShape.Square2x2) groups.Add(new MatchGroup(cells, key, shape));
+        }
+
+        foreach (List<Vector2Int> square in FindSquaresAt(coordinate, key))
+        {
+            groups.Add(new MatchGroup(square, key, MatchShape.Square2x2));
+        }
+
+        return groups;
     }
 
     public IReadOnlyList<MatchGroup> CheckWholeField()
@@ -49,14 +78,51 @@ public class MatchChecker
         return FindAllMatches();
     }
 
-    private static bool Contains(MatchGroup group, Vector2Int coordinate)
+    private List<Vector2Int> ExpandLine(Vector2Int coordinate, string key, bool horizontal)
     {
-        foreach (Vector2Int cell in group.Cells)
+        Vector2Int forward = horizontal ? Vector2Int.right : Vector2Int.up;
+        Vector2Int backward = -forward;
+
+        List<Vector2Int> cells = new() { coordinate };
+
+        for (Vector2Int cell = coordinate + backward; Piece.AreSame(gameField.GetPiece(cell), key); cell += backward)
         {
-            if (cell == coordinate) return true;
+            cells.Add(cell);
         }
 
-        return false;
+        for (Vector2Int cell = coordinate + forward; Piece.AreSame(gameField.GetPiece(cell), key); cell += forward)
+        {
+            cells.Add(cell);
+        }
+
+        return cells;
+    }
+
+    private IEnumerable<List<Vector2Int>> FindSquaresAt(Vector2Int coordinate, string key)
+    {
+        Vector2Int[] corners =
+        {
+            coordinate + new Vector2Int(-1, -1),
+            coordinate + new Vector2Int(0, -1),
+            coordinate + new Vector2Int(-1, 0),
+            coordinate
+        };
+
+        foreach (Vector2Int corner in corners)
+        {
+            List<Vector2Int> square = new()
+            {
+                corner,
+                corner + Vector2Int.right,
+                corner + Vector2Int.up,
+                corner + Vector2Int.one
+            };
+
+            if (square.TrueForAll(cell => cell == coordinate || Piece.AreSame(gameField.GetPiece(cell), key)))
+            {
+                yield return square;
+            }
+        }
     }
 
     private List<MatchGroup> FindAllMatches()
@@ -85,8 +151,8 @@ public class MatchChecker
                 // to spawn, so it's treated the same as no match at all until that's built.
                 if (shape == MatchShape.Square2x2) continue;
 
-                string key = ((RegularPiece)gameField.GetPiece(cells[0])).Key;
-                groups.Add(new MatchGroup(cells, key, shape));
+                string regularPieceType = ((RegularPiece)gameField.GetPiece(cells[0])).RegularPieceType;
+                groups.Add(new MatchGroup(cells, regularPieceType, shape));
             }
         }
 
@@ -210,7 +276,7 @@ public class MatchChecker
         return GetKey(new Vector2Int(x, y));
     }
 
-    private string GetKey(Vector2Int coordinate) => (gameField.GetPiece(coordinate) as RegularPiece)?.Key;
+    private string GetKey(Vector2Int coordinate) => (gameField.GetPiece(coordinate) as RegularPiece)?.RegularPieceType;
 
     
     //Union (merge of first and second exluding duplicates)
