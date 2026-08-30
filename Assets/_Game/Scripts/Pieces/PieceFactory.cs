@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,12 +15,16 @@ namespace Pieces
             this.gameFieldView = gameFieldView;
         }
 
+        public event Action<Piece> PieceCreated;
+
         public RegularPiece CreateRegularPiece(string regularPieceType, Transform parent)
         {
             PieceView view = Object.Instantiate(viewMapping.PieceViewPrefab, parent);
             view.Initialize(gameFieldView.CellSize);
             view.SetSprite(viewMapping.GetSprite(regularPieceType));
-            return new RegularPiece(view, regularPieceType);
+            RegularPiece piece = new(view, regularPieceType);
+            PieceCreated?.Invoke(piece);
+            return piece;
         }
 
         public RegularPiece CreateRandomRegularPiece(IReadOnlyList<string> allowedRegularPieceTypes, Transform parent)

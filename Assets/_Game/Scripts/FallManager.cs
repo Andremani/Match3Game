@@ -16,7 +16,7 @@ public class FallManager
         this.gameField = gameField;
     }
 
-    public event Action<Piece> PieceRegistered;
+    public event Action<Piece> PieceFell;
     public event Action FallsCompleted;
 
     public async UniTask ResolveFallsAsync(List<Vector2Int> emptyCells)
@@ -99,6 +99,6 @@ public class FallManager
         }
 
         gameField.SetPiece(targetCoordinate, piece);
-        PieceRegistered?.Invoke(piece);
+        PieceFell?.Invoke(piece);
     }
 }

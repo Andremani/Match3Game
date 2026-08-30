@@ -16,6 +16,7 @@ public class GameLifetimeScope : LifetimeScope
 #endif
         builder.Register<ConfigParser>(Lifetime.Singleton);
         builder.Register<ConfigReader>(Lifetime.Singleton);
+        builder.Register<GlobalEventBroker>(Lifetime.Singleton);
 
         builder.RegisterInstance(levelLifetimeScopePrefab);
 

@@ -19,6 +19,7 @@ public class LevelLifetimeScope : LifetimeScope
         builder.Register<FallManager>(Lifetime.Scoped);
         builder.Register<TurnResolver>(Lifetime.Scoped);
         builder.Register<PieceSwipeHandler>(Lifetime.Scoped);
+        builder.Register<LevelEventBridge>(Lifetime.Scoped);
 
         builder.RegisterComponentOnNewGameObject<LevelManager>(Lifetime.Scoped, "LevelManager");
         builder.RegisterBuildCallback(container =>
@@ -26,6 +27,7 @@ public class LevelLifetimeScope : LifetimeScope
             container.Resolve<PieceSwipeHandler>();
             container.Resolve<TurnResolver>();
             container.Resolve<LevelManager>();
+            container.Resolve<LevelEventBridge>();
         });
     }
 }

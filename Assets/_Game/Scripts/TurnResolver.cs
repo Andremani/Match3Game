@@ -21,19 +21,19 @@ public class TurnResolver
     private readonly GameField gameField;
     private readonly MatchChecker matchChecker;
     private readonly FallManager fallManager;
-    private readonly SwipeInputReader swipeInputReader;
+    private readonly PieceSwipeHandler pieceSwipeHandler;
 
     private bool isBusy;
     private bool isInputEnabled = true;
 
-    public TurnResolver(GameField gameField, MatchChecker matchChecker, FallManager fallManager, SwipeInputReader swipeInputReader)
+    public TurnResolver(GameField gameField, MatchChecker matchChecker, FallManager fallManager, PieceSwipeHandler pieceSwipeHandler)
     {
         this.gameField = gameField;
         this.matchChecker = matchChecker;
         this.fallManager = fallManager;
-        this.swipeInputReader = swipeInputReader;
+        this.pieceSwipeHandler = pieceSwipeHandler;
 
-        swipeInputReader.Swiped += OnSwiped;
+        pieceSwipeHandler.Swiped += OnSwiped;
     }
 
     public event Action TurnMade;
