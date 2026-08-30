@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -15,7 +14,7 @@ namespace Pieces
             this.gameFieldView = gameFieldView;
         }
 
-        public event Action<Piece> PieceCreated;
+        public event System.Action<Piece> PieceCreated;
 
         public RegularPiece CreateRegularPiece(string regularPieceType, Transform parent)
         {
