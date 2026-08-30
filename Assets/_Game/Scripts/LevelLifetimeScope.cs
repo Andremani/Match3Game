@@ -18,12 +18,12 @@ public class LevelLifetimeScope : LifetimeScope
         builder.Register<MatchChecker>(Lifetime.Scoped);
         builder.Register<FallManager>(Lifetime.Scoped);
         builder.Register<TurnResolver>(Lifetime.Scoped);
+        builder.Register<PieceSwipeHandler>(Lifetime.Scoped);
 
-        builder.RegisterComponentOnNewGameObject<SwipeInputReader>(Lifetime.Scoped, "SwipeInputReader");
         builder.RegisterComponentOnNewGameObject<LevelManager>(Lifetime.Scoped, "LevelManager");
         builder.RegisterBuildCallback(container =>
         {
-            container.Resolve<SwipeInputReader>();
+            container.Resolve<PieceSwipeHandler>();
             container.Resolve<TurnResolver>();
             container.Resolve<LevelManager>();
         });
