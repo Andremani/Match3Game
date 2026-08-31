@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Collections.Generic;
 using Configuration;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -5,51 +7,64 @@ using UnityEngine.InputSystem;
 using VContainer;
 using VContainer.Unity;
 
-public class GameManager : MonoBehaviour
+public class GameManager : IAsyncStartable
 {
     private InputAction startAction;
     private LevelLifetimeScope levelLifetimeScopePrefab;
     private LevelLifetimeScope currentLevelScope;
-    private ConfigReader configReader;
+    private GameConfiguration gameConfiguration;
+    private GlobalEventBroker globalEventBroker;
 
     public string CurrentLevelName { get; private set; } = string.Empty;
 
-    [Inject]
-    public void Construct(LevelLifetimeScope levelLifetimeScopePrefab, ConfigReader configReader)
+    public GameManager(LevelLifetimeScope levelLifetimeScopePrefab, GameConfiguration gameConfiguration, GlobalEventBroker globalEventBroker)
     {
         this.levelLifetimeScopePrefab = levelLifetimeScopePrefab;
-        this.configReader = configReader;
+        this.gameConfiguration = gameConfiguration;
+        this.globalEventBroker = globalEventBroker;
     }
 
-    private void Start()
+    public async UniTask StartAsync(CancellationToken cancellation)
     {
+        await gameConfiguration.LoadAllConfigsAsync();
+
         startAction = InputSystem.actions.FindAction("Submit");
         startAction.canceled += OnStartGameAction;
+
+        globalEventBroker.LevelWon += OnLevelWon;
+        globalEventBroker.LevelLost += OnLevelLost;
     }
 
-    private void OnStartGameAction(InputAction.CallbackContext callback) => StartFirstLevelAsync().Forget();
+    private void OnStartGameAction(InputAction.CallbackContext callback) => StartFirstLevel();
 
-    private async UniTaskVoid StartFirstLevelAsync()
+    private void StartFirstLevel()
     {
         if (currentLevelScope != null) return;
-
-        LevelsListConfig levelsList = await configReader.LoadLevelsListAsync();
-        await StartLevelAsync(levelsList.LevelNames[0]);
+        StartLevel(1);
     }
 
-    private async UniTask StartLevelAsync(string levelName)
+    private void StartLevel(int levelNumber)
     {
-        CurrentLevelName = levelName;
+        CurrentLevelName = gameConfiguration.LevelsListConfig.LevelNames[levelNumber-1];
 
-        PieceMappingsConfig pieceMappings = await configReader.LoadPieceMappingsAsync();
-        LevelConfig levelConfig = await configReader.LoadLevelConfigAsync(levelName);
+        LevelConfig levelConfig = gameConfiguration.LevelConfigs[CurrentLevelName];
 
         using (LifetimeScope.Enqueue(builder =>
         {
-            builder.RegisterInstance(pieceMappings);
+            builder.RegisterInstance(gameConfiguration.PieceMappingsConfig);
             builder.RegisterInstance(levelConfig);
         }))
-        currentLevelScope = Instantiate(levelLifetimeScopePrefab);
-        currentLevelScope.gameObject.name = $"Level '{levelName}'";
+        currentLevelScope = Object.Instantiate(levelLifetimeScopePrefab);
+        currentLevelScope.gameObject.name = $"Level '{CurrentLevelName}'";
+    }
+
+    private void OnLevelWon()
+    {
+        
+    }
+
+    private void OnLevelLost()
+    {
+        
     }
 }
