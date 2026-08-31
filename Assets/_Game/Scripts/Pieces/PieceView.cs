@@ -38,6 +38,12 @@ namespace Pieces
             baseMaskInteraction = spriteRenderer.maskInteraction;
         }
 
+        private void OnDestroy()
+        {
+            transform.DOKill();
+            spriteRenderer.DOKill();
+        }
+
         public void Initialize(Vector2 cellSize)
         {
             maxDragDistance = Mathf.Min(cellSize.x, cellSize.y) * NudgeFactor;
