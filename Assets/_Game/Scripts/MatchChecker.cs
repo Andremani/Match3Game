@@ -6,6 +6,8 @@ using UnityEngine;
 public class MatchChecker
 {
     private const int MinLineLength = 3;
+    private const float WholeFieldCheckCoefficient = 0.3f;
+    private bool areSquaresAllowed = false;
 
     private static readonly Vector2Int[] AdjacentDirections =
     {
@@ -39,10 +41,30 @@ public class MatchChecker
         return matches;
     }
 
+    public IReadOnlyList<MatchGroup> CheckAt(List<Vector2Int> coordinates)
+    {
+        List<MatchGroup> matches;
+
+        if(coordinates.Count < gameField.CellsCount * WholeFieldCheckCoefficient)
+        {
+            matches = new();
+            foreach(Vector2Int coordinate in coordinates)
+            {
+                matches.AddRange(CheckAt(coordinate));
+            }
+        }
+        else
+        {
+            matches = FindAllMatches();
+        }
+        
+        return matches;
+    }
+
     public IReadOnlyList<MatchGroup> CheckAt(Vector2Int coordinate) => CheckAt(coordinate, GetKey(coordinate));
 
-    // Variant for a piece that isn't on the field yet - lets callers (e.g. initial fill) test a
-    // candidate key at a coordinate without actually placing anything there first.
+    // Variant for a piece that isn't on the field yet - lets initial fill test a
+    // candidate key at a coordinate without actually placing anything there first
     public IReadOnlyList<MatchGroup> CheckAt(Vector2Int coordinate, string key)
     {
         List<MatchGroup> groups = new();
@@ -60,22 +82,18 @@ public class MatchChecker
             List<Vector2Int> cells = lineCells.Distinct().ToList();
             MatchShape shape = ClassifyShape(cells);
 
-            // A pure 2x2 square isn't an actionable match yet - there's no "plane" booster
-            // to spawn, so it's treated the same as no match at all until that's built.
-            if (shape != MatchShape.Square2x2) groups.Add(new MatchGroup(cells, key, shape));
+            groups.Add(new MatchGroup(cells, key, shape));
         }
 
-        foreach (List<Vector2Int> square in FindSquaresAt(coordinate, key))
+        if(areSquaresAllowed)
         {
-            groups.Add(new MatchGroup(square, key, MatchShape.Square2x2));
+            foreach (List<Vector2Int> square in FindSquaresAt(coordinate, key))
+            {
+                groups.Add(new MatchGroup(square, key, MatchShape.Square2x2));
+            }
         }
 
         return groups;
-    }
-
-    public IReadOnlyList<MatchGroup> CheckWholeField()
-    {
-        return FindAllMatches();
     }
 
     private List<Vector2Int> ExpandLine(Vector2Int coordinate, string key, bool horizontal)
@@ -147,9 +165,10 @@ public class MatchChecker
                 List<Vector2Int> cells = FloodFill(matched, visited, x, y, width, height);
                 MatchShape shape = ClassifyShape(cells);
 
-                // A pure 2x2 square isn't an actionable match yet - there's no "plane" booster
-                // to spawn, so it's treated the same as no match at all until that's built.
-                if (shape == MatchShape.Square2x2) continue;
+                if(!areSquaresAllowed)
+                {
+                    if (shape == MatchShape.Square2x2) continue;
+                }
 
                 string regularPieceType = ((RegularPiece)gameField.GetPiece(cells[0])).RegularPieceType;
                 groups.Add(new MatchGroup(cells, regularPieceType, shape));

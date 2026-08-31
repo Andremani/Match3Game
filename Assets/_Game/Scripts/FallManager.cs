@@ -19,9 +19,10 @@ public class FallManager
     public event Action<Piece> PieceFell;
     public event Action FallsCompleted;
 
-    public async UniTask ResolveFallsAsync(List<Vector2Int> emptyCells)
+    /// <returns>Fallen pieces coordinates</returns>
+    public async UniTask<List<Vector2Int>> ResolveFallsAsync(List<Vector2Int> emptyCells)
     {
-        List<UniTask> fallTasks = new();
+        List<UniTask<Vector2Int>> fallTasks = new();
         IEnumerable<int> affectedColumns = emptyCells.Select(c => c.x).Distinct();
 
         foreach (int x in affectedColumns)
@@ -29,11 +30,14 @@ public class FallManager
             fallTasks.AddRange(ResolveColumn(x));
         }
 
-        await UniTask.WhenAll(fallTasks);
+        Vector2Int[] results = await UniTask.WhenAll(fallTasks);
+        List<Vector2Int> allFallenPieces = results.ToList();
+
         FallsCompleted?.Invoke();
+        return allFallenPieces;
     }
 
-    private List<UniTask> ResolveColumn(int x)
+    private List<UniTask<Vector2Int>> ResolveColumn(int x)
     {
         List<Vector2Int> columnCells = new();
         int cellsInColumn = gameField.CellsAmountByColumn.TryGetValue(x, out int count) ? count : 0;
@@ -58,7 +62,7 @@ public class FallManager
         }
 
         int emptyCount = columnCells.Count - existingPieces.Count;
-        List<UniTask> fallTasks = new();
+        List<UniTask<Vector2Int>> fallTasks = new();
 
         for (int i = 0; i < existingPieces.Count; i++)
         {
@@ -86,7 +90,7 @@ public class FallManager
         return fallTasks;
     }
 
-    private async UniTask MovePieceAsync(Piece piece, Vector2Int targetCoordinate)
+    private async UniTask<Vector2Int> MovePieceAsync(Piece piece, Vector2Int targetCoordinate)
     {
         Vector3 targetWorldPosition = gameField.GetWorldPosition(targetCoordinate);
 
@@ -100,5 +104,6 @@ public class FallManager
 
         gameField.SetPiece(targetCoordinate, piece);
         PieceFell?.Invoke(piece);
+        return targetCoordinate;
     }
 }

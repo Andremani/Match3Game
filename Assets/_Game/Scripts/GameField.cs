@@ -26,6 +26,7 @@ public class GameField
     public int Width => width;
     public int Height => height;
     public Dictionary<int, int> CellsAmountByColumn = new();
+    public int CellsCount => cells == null ? 0 : cells.Count;
 
     public void BuildField(LevelConfig levelConfig, PieceMappingsConfig pieceMappings)
     {

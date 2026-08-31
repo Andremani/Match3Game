@@ -83,8 +83,8 @@ public class TurnResolver
         while (matches.Count > 0)
         {
             List<Vector2Int> emptyCells = await RemoveMatchesAsync(matches);
-            await fallManager.ResolveFallsAsync(emptyCells);
-            matches = matchChecker.CheckWholeField();
+            List<Vector2Int> fallenPieces = await fallManager.ResolveFallsAsync(emptyCells);
+            matches = matchChecker.CheckAt(fallenPieces);
 
             if (matches.Count > 0)
             {
@@ -95,6 +95,12 @@ public class TurnResolver
                 MatchFailed?.Invoke();
             }
         }
+
+        //potentialMatches = matchChecker.PotentialMatches()
+        //if (potentialMatches.Count == 0)
+        //{
+            //Reshuffle gamefield
+        //}
 
         TurnResolved?.Invoke();
         isBusy = false;
