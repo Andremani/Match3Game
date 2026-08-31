@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f942d742715cffa439c0a50a580207c3, type: 3}
+  m_Name: AudioDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::AudioDatabase
+  soundEntries:
+  - key: music1
+    config:
+      clips:
+      - {fileID: 8300000, guid: c64e601c6e3406943a2e72e0cf96df7b, type: 3}
+      volume: 1
+      minPitch: 1
+      maxPitch: 1
+  - key: win
+    config:
+      clips:
+      - {fileID: 8300000, guid: e9dea202103509e4084dd3f667af1551, type: 3}
+      - {fileID: 8300000, guid: a76f3c04b5b4c704f9cca5ffa8ed8ad9, type: 3}
+      - {fileID: 8300000, guid: 3b9b7a6a95d960942887daf31e0a6c9b, type: 3}
+      volume: 1
+      minPitch: 1
+      maxPitch: 1
+  - key: fail
+    config:
+      clips:
+      - {fileID: 8300000, guid: cb3cfb27fcbca4047a6503fff266459b, type: 3}
+      volume: 1
+      minPitch: 0.95
+      maxPitch: 1.05
+  - key: wrong_match
+    config:
+      clips:
+      - {fileID: 8300000, guid: 71c794d752e68084bb60fadf147cc851, type: 3}
+      volume: 0.797
+      minPitch: 0.95
+      maxPitch: 1.05
+  - key: move
+    config:
+      clips:
+      - {fileID: 8300000, guid: b12a5f357002a764ab91ba2eda9fc6aa, type: 3}
+      volume: 0.7
+      minPitch: 0.9
+      maxPitch: 1.1
+  - key: match_pop
+    config:
+      clips:
+      - {fileID: 8300000, guid: de061e82dc1ede04a8daee36e2ea9584, type: 3}
+      - {fileID: 8300000, guid: e8e1d94c8c1809c4680c5cc8e95175fd, type: 3}
+      - {fileID: 8300000, guid: f7c3a2eb97f81ec46a4b3080382f32c5, type: 3}
+      volume: 0.5
+      minPitch: 0.8
+      maxPitch: 1.2

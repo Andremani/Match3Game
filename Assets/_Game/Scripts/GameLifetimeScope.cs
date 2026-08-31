@@ -5,6 +5,9 @@ using VContainer.Unity;
 
 public class GameLifetimeScope : LifetimeScope
 {
+    [SerializeField] private AudioPlayer audioPlayerPrefab;
+    [SerializeField] private AudioDatabase audioDatabase;
+    [SerializeField] private AudioManager audioManagerPrefab;
     [SerializeField] private LevelLifetimeScope levelLifetimeScopePrefab;
 
     protected override void Configure(IContainerBuilder builder)
@@ -19,6 +22,10 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<GameConfiguration>(Lifetime.Singleton);
         builder.Register<GlobalEventBroker>(Lifetime.Singleton);
 
+        builder.RegisterComponentInNewPrefab(audioPlayerPrefab, Lifetime.Singleton).As<IAudioPlayer>();
+        builder.RegisterInstance(audioDatabase);
+        builder.RegisterComponentInNewPrefab(audioManagerPrefab, Lifetime.Singleton);
+
         builder.RegisterInstance(levelLifetimeScopePrefab);
 
         builder.RegisterEntryPoint<GameManager>(Lifetime.Singleton).AsSelf();
@@ -26,6 +33,8 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterBuildCallback(container =>
         {
             container.Resolve<SwipeGestureDetector>();
+            container.Resolve<AudioPlayer>();
+            container.Resolve<AudioManager>();
         });
     }
 }

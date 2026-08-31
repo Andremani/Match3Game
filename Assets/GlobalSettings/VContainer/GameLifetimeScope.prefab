@@ -45,7 +45,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameLifetimeScope
   parentReference:
-    TypeName:
+    TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
+  audioPlayerPrefab: {fileID: 200180294969646532, guid: 268d436434b0c45458c031540e675cf6, type: 3}
+  audioDatabase: {fileID: 11400000, guid: d7e2b34fc40d1374eb3e3e54c0d4ae19, type: 2}
+  audioManagerPrefab: {fileID: 2239577288565607100, guid: 92eee486ce956274e857672871dd7eec, type: 3}
   levelLifetimeScopePrefab: {fileID: 100102, guid: c45a622348ff4d5cb2b0d3b1a268707f, type: 3}
