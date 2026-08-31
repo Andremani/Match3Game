@@ -1,5 +1,4 @@
 using System.Threading;
-using System.Collections.Generic;
 using Configuration;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -11,11 +10,13 @@ public class GameManager : IAsyncStartable
 {
     private InputAction startAction;
     private LevelLifetimeScope levelLifetimeScopePrefab;
-    private LevelLifetimeScope currentLevelScope;
+    private LevelLifetimeScope currentLevel;
     private GameConfiguration gameConfiguration;
     private GlobalEventBroker globalEventBroker;
 
-    public string CurrentLevelName { get; private set; } = string.Empty;
+    public int CurrentLevelNumber { get; private set; }
+
+    public event System.Action<int, LevelConfig> LevelStarted;
 
     public GameManager(LevelLifetimeScope levelLifetimeScopePrefab, GameConfiguration gameConfiguration, GlobalEventBroker globalEventBroker)
     {
@@ -39,32 +40,47 @@ public class GameManager : IAsyncStartable
 
     private void StartFirstLevel()
     {
-        if (currentLevelScope != null) return;
+        if (currentLevel != null) return;
         StartLevel(1);
     }
 
     private void StartLevel(int levelNumber)
     {
-        CurrentLevelName = gameConfiguration.LevelsListConfig.LevelNames[levelNumber-1];
+        CurrentLevelNumber = levelNumber;
 
-        LevelConfig levelConfig = gameConfiguration.LevelConfigs[CurrentLevelName];
+        string levelName = gameConfiguration.LevelsListConfig.LevelNames[levelNumber-1];
+
+        LevelConfig levelConfig = gameConfiguration.LevelConfigs[levelName];
 
         using (LifetimeScope.Enqueue(builder =>
         {
             builder.RegisterInstance(gameConfiguration.PieceMappingsConfig);
             builder.RegisterInstance(levelConfig);
         }))
-        currentLevelScope = Object.Instantiate(levelLifetimeScopePrefab);
-        currentLevelScope.gameObject.name = $"Level '{CurrentLevelName}'";
+        currentLevel = Object.Instantiate(levelLifetimeScopePrefab);
+        currentLevel.gameObject.name = $"Level '{levelName}'";
+
+        LevelStarted?.Invoke(levelNumber, levelConfig);
     }
 
     private void OnLevelWon()
     {
-        
+        DestroyLevel(currentLevel);
+        StartLevel(CurrentLevelNumber + 1);
     }
 
     private void OnLevelLost()
     {
-        
+        DestroyLevel(currentLevel);
+        StartLevel(CurrentLevelNumber);
+    }
+
+    private void DestroyLevel(LevelLifetimeScope levelLifetimeScope)
+    {
+        if (levelLifetimeScope != null)
+        {
+            levelLifetimeScope.Dispose(); 
+            Object.Destroy(levelLifetimeScope.gameObject);
+        }
     }
 }

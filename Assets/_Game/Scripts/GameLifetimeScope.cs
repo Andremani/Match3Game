@@ -21,7 +21,7 @@ public class GameLifetimeScope : LifetimeScope
 
         builder.RegisterInstance(levelLifetimeScopePrefab);
 
-        builder.RegisterEntryPoint<GameManager>(Lifetime.Singleton);
+        builder.RegisterEntryPoint<GameManager>(Lifetime.Singleton).AsSelf();
         builder.RegisterComponentOnNewGameObject<SwipeGestureDetector>(Lifetime.Singleton, "SwipeGestureDetector");
         builder.RegisterBuildCallback(container =>
         {

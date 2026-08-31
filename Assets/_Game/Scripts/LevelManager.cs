@@ -51,7 +51,7 @@ public class LevelManager : MonoBehaviour
         Debug.Log($"Collected {collectedWinPieceCount}/{levelConfig.WinPieceAmount} '{winPieceKey}'");
     }
 
-    public void RegisterTurnMade()
+    public void RegisterTurnMade(int turnNumber)
     {
         if (levelConfig.MaxTurns <= 0) return;
 

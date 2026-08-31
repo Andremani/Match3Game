@@ -23,6 +23,7 @@ public class TurnResolver
     private readonly FallManager fallManager;
     private readonly PieceSwipeHandler pieceSwipeHandler;
 
+    private int turnsMade;
     private bool isBusy;
     private bool isInputEnabled = true;
 
@@ -36,7 +37,7 @@ public class TurnResolver
         pieceSwipeHandler.Swiped += OnSwiped;
     }
 
-    public event Action TurnMade;
+    public event Action<int> TurnMade;
     public event Action<string, int> PiecesCollected;
     public event Action TurnResolved;
 
@@ -76,7 +77,8 @@ public class TurnResolver
             return;
         }
 
-        TurnMade?.Invoke();
+        turnsMade++;
+        TurnMade?.Invoke(turnsMade);
 
         while (matches.Count > 0)
         {
