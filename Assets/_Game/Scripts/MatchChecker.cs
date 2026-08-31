@@ -52,12 +52,14 @@ public class MatchChecker
             {
                 matches.AddRange(CheckAt(coordinate));
             }
+            matches = MatchGroup.GetUniqueGroups(matches);
         }
         else
         {
             matches = FindAllMatches();
         }
         
+        Debug.Log("Matches count - " + matches.Count);
         return matches;
     }
 
@@ -151,7 +153,10 @@ public class MatchChecker
         bool[,] matched = new bool[width, height];
         MarkLineRuns(matched, width, height, horizontal: true);
         MarkLineRuns(matched, width, height, horizontal: false);
-        MarkSquares(matched, width, height);
+        if(areSquaresAllowed)
+        {
+            MarkSquares(matched, width, height);
+        }
 
         List<MatchGroup> groups = new();
         bool[,] visited = new bool[width, height];
@@ -296,20 +301,4 @@ public class MatchChecker
     }
 
     private string GetKey(Vector2Int coordinate) => (gameField.GetPiece(coordinate) as RegularPiece)?.RegularPieceType;
-
-    
-    //Union (merge of first and second exluding duplicates)
-
-    // private static List<MatchGroup> DeduceGroups(IReadOnlyList<MatchGroup> first, IReadOnlyList<MatchGroup> second)
-    // {
-    //     List<MatchGroup> groups = new(first);
-
-    //     foreach (MatchGroup group in second)
-    //     {
-    //         bool overlaps = groups.Any(existing => existing.Cells.Intersect(group.Cells).Any());
-    //         if (!overlaps) groups.Add(group);
-    //     }
-
-    //     return groups;
-    // }
 }

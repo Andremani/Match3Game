@@ -39,52 +39,77 @@ public class FallManager
 
     private List<UniTask<Vector2Int>> ResolveColumn(int x)
     {
-        List<Vector2Int> columnCells = new();
-        int cellsInColumn = gameField.CellsAmountByColumn.TryGetValue(x, out int count) ? count : 0;
+        (List<Vector2Int> emptyCells, List<Piece> fallingPieces) = CollectGapsAndFallingPieces(x);
 
-        for (int y = 0; y < gameField.Height && columnCells.Count < cellsInColumn; y++)
+        List<UniTask<Vector2Int>> fallTasks = new();
+        for (int i = 0; i < fallingPieces.Count; i++)
+        {
+            fallTasks.Add(MovePieceAsync(fallingPieces[i], emptyCells[i]));
+        }
+
+        List<Vector2Int> spawnTargets = emptyCells.Skip(fallingPieces.Count).Reverse().ToList();
+        fallTasks.AddRange(SpawnFallingPieces(x, spawnTargets));
+
+        return fallTasks;
+    }
+
+    // Scans the column bottom-to-top (y grows downward). Pieces already resting on the
+    // floor are skipped entirely - they never moved. Once the first gap is found, every
+    // cell above it falls: pieces go into fallingPieces, and every cell that ends up empty
+    // (original gaps and cells vacated by falling pieces alike) is appended to emptyCells
+    // in the same pass - so emptyCells[i] is already the correct target for
+    // fallingPieces[i], and the leftover tail is what's left for newly spawned pieces.
+    private (List<Vector2Int> emptyCells, List<Piece> fallingPieces) CollectGapsAndFallingPieces(int x)
+    {
+        List<Vector2Int> emptyCells = new();
+        List<Piece> fallingPieces = new();
+        bool gapFound = false;
+
+        for (int y = gameField.Height - 1; y >= 0; y--)
         {
             Vector2Int coordinate = new(x, y);
-            if (gameField.IsValidPosition(coordinate))
-            {
-                columnCells.Add(coordinate);
-            }
-        }
+            if (!gameField.IsValidPosition(coordinate)) continue;
 
-        List<Piece> existingPieces = new();
-        foreach (var coordinate in columnCells)
-        {
             Piece piece = gameField.GetPiece(coordinate);
-            if (piece == null) continue;
 
-            existingPieces.Add(piece);
-            gameField.RemovePiece(coordinate);
-        }
-
-        int emptyCount = columnCells.Count - existingPieces.Count;
-        List<UniTask<Vector2Int>> fallTasks = new();
-
-        for (int i = 0; i < existingPieces.Count; i++)
-        {
-            Vector2Int targetCoordinate = columnCells[emptyCount + i];
-            fallTasks.Add(MovePieceAsync(existingPieces[i], targetCoordinate));
-        }
-
-        if (emptyCount > 0)
-        {
-            int topRow = columnCells[0].y;
-
-            for (int i = 0; i < emptyCount; i++)
+            if (!gapFound)
             {
-                Vector2Int targetCoordinate = columnCells[i];
-                Vector2Int spawnCoordinate = new(x, topRow - emptyCount + i);
-
-                RegularPiece piece = gameField.CreateRandomRegularPiece();
-                piece.Coordinate = spawnCoordinate;
-                piece.SetPositionImmediate(gameField.GetWorldPosition(spawnCoordinate));
-
-                fallTasks.Add(MovePieceAsync(piece, targetCoordinate));
+                if (piece != null) continue;
+                gapFound = true;
             }
+
+            if (piece == null)
+            {
+                emptyCells.Add(coordinate);
+            }
+            else
+            {
+                fallingPieces.Add(piece);
+                gameField.RemovePiece(coordinate);
+                emptyCells.Add(coordinate);
+            }
+        }
+
+        return (emptyCells, fallingPieces);
+    }
+
+    private List<UniTask<Vector2Int>> SpawnFallingPieces(int x, List<Vector2Int> targets)
+    {
+        List<UniTask<Vector2Int>> fallTasks = new();
+        if (targets.Count == 0) return fallTasks;
+
+        int topRow = targets[0].y;
+
+        for (int i = 0; i < targets.Count; i++)
+        {
+            Vector2Int targetCoordinate = targets[i];
+            Vector2Int spawnCoordinate = new(x, topRow - targets.Count + i);
+
+            RegularPiece piece = gameField.CreateRandomRegularPiece();
+            piece.Coordinate = spawnCoordinate;
+            piece.SetPositionImmediate(gameField.GetWorldPosition(spawnCoordinate));
+
+            fallTasks.Add(MovePieceAsync(piece, targetCoordinate));
         }
 
         return fallTasks;

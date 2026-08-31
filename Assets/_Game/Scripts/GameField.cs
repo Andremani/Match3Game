@@ -10,7 +10,6 @@ public class GameField
     private readonly GameFieldView gameFieldView;
     private readonly MatchChecker matchChecker;
 
-    private Dictionary<Vector2Int, Cell> cells;
     private List<string> regularPiecesTypePool = new();
     private int width;
     private int height;
@@ -23,10 +22,10 @@ public class GameField
         matchChecker.Init(this);
     }
 
+    public Dictionary<Vector2Int, Cell> Cells { get; private set; } = new();
     public int Width => width;
     public int Height => height;
-    public Dictionary<int, int> CellsAmountByColumn = new();
-    public int CellsCount => cells == null ? 0 : cells.Count;
+    public int CellsCount => Cells == null ? 0 : Cells.Count;
 
     public void BuildField(LevelConfig levelConfig, PieceMappingsConfig pieceMappings)
     {
@@ -40,16 +39,16 @@ public class GameField
                 .ToList();
         }
 
-        cells = CreateCells(levelConfig);
-        gameFieldView.PaintField(cells, height, width);
+        CreateCells(levelConfig);
+        gameFieldView.PaintField(Cells, height, width);
 
         FillCells(levelConfig.Map, pieceMappings);
         gameFieldView.CenterCamera();
     }
 
-    private Dictionary<Vector2Int, Cell> CreateCells(LevelConfig levelConfig)
+    private void CreateCells(LevelConfig levelConfig)
     {
-        Dictionary<Vector2Int, Cell> cells = new();
+        Cells = new();
         for (int y = 0; y < Height; y++)
         {
             for (int x = 0; x < Width; x++)
@@ -58,21 +57,17 @@ public class GameField
                 if (!PieceMappingsConfig.IsEmptySymbol(symbol))
                 {
                     Vector2Int coordinate = new Vector2Int(x,y);
-                    cells.Add(coordinate, new Cell(coordinate));
-
-                    CellsAmountByColumn.TryGetValue(x, out int current);
-                    CellsAmountByColumn[x] = current + 1;
+                    Cells.Add(coordinate, new Cell(coordinate));
                 }
             }
         }
-        return cells;
     }
 
     private void FillCells(char[,] map, PieceMappingsConfig pieceMappings)
     {
         //Predefined pieces first, random after - for proper match-cheking
 
-        foreach(var cell in cells.Values)
+        foreach(var cell in Cells.Values)
         {
             char symbol = map[cell.Coordinate.x, cell.Coordinate.y];
             if (PieceMappingsConfig.RandomSymbol != symbol)
@@ -81,7 +76,7 @@ public class GameField
             }
         }
 
-        foreach(var cell in cells.Values)
+        foreach(var cell in Cells.Values)
         {
             if (cell.Piece != null) continue;
 
@@ -93,7 +88,7 @@ public class GameField
         }
     }
 
-    public bool IsValidPosition(Vector2Int coordinate) => cells.ContainsKey(coordinate);
+    public bool IsValidPosition(Vector2Int coordinate) => Cells.ContainsKey(coordinate);
     
     public Vector3 GetWorldPosition(Vector2Int coordinate) => gameFieldView.GetWorldPosition(coordinate);
 
@@ -105,20 +100,20 @@ public class GameField
     public Piece GetPiece(Vector2Int coordinate)
     {
         if(!IsValidPosition(coordinate)) return null;
-        return cells[coordinate].Piece;
+        return Cells[coordinate].Piece;
     }
 
     public void SetPiece(Vector2Int coordinate, Piece piece)
     {
         if(!IsValidPosition(coordinate)) return;
-        cells[coordinate].Piece = piece;
+        Cells[coordinate].Piece = piece;
         if (piece != null) piece.Coordinate = coordinate;
     }
 
     public void RemovePiece(Vector2Int coordinate)
     {
         if(!IsValidPosition(coordinate)) return;
-        cells[coordinate].Piece = null;
+        Cells[coordinate].Piece = null;
     }
 
     private void CreatePieceAt(Vector2Int coordinate, char symbol, PieceMappingsConfig pieceMappings)
@@ -139,7 +134,7 @@ public class GameField
         piece.Coordinate = coordinate;
         piece.SetPositionImmediate(gameFieldView.GetWorldPosition(coordinate));
 
-        cells[coordinate].Piece = piece;
+        Cells[coordinate].Piece = piece;
     }
 
     private string PickRandomRegularPieceKeyWithoutMatch(Vector2Int coordinate)
@@ -153,10 +148,7 @@ public class GameField
             chosenType = candidatesTypePool[Random.Range(0, candidatesTypePool.Count)];
             candidatesTypePool.Remove(chosenType);
 
-            if(matchChecker.CheckAt(coordinate, chosenType).Count > 0)
-            {
-                hasMatch = true;
-            }
+            hasMatch = matchChecker.CheckAt(coordinate, chosenType).Count > 0;
 
         } while (hasMatch & candidatesTypePool.Count > 0);
 

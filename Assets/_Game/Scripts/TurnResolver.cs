@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 using Pieces;
 using UnityEngine;
 
-public class TurnResolver
+public class TurnResolver : IDisposable
 {
     private const float SwapDuration = 0.4f;
     private const float CollapseDuration = 0.4f;
@@ -37,6 +37,11 @@ public class TurnResolver
         pieceSwipeHandler.Swiped += OnSwiped;
     }
 
+    public void Dispose()
+    {
+        pieceSwipeHandler.Swiped -= OnSwiped;
+    }
+
     public event Action<int> TurnMade;
     public event Action<string, int> PiecesCollected;
     public event Action TurnResolved;
@@ -46,7 +51,7 @@ public class TurnResolver
 
     public void SetInputEnabled(bool enabled) => isInputEnabled = enabled;
 
-    private async void OnSwiped(Piece piece, SwipeDirection direction)
+    private void OnSwiped(Piece piece, SwipeDirection direction)
     {
         if (!isInputEnabled || isBusy) return;
 
@@ -58,33 +63,18 @@ public class TurnResolver
         Piece otherPiece = gameField.GetPiece(toCoordinate);
         if (otherPiece == null) return;
 
+        ResolveSwipeAsync(piece, fromCoordinate, otherPiece, toCoordinate).Forget();
+    }
+
+    private async UniTaskVoid ResolveSwipeAsync(Piece piece, Vector2Int fromCoordinate, Piece otherPiece, Vector2Int toCoordinate)
+    {
         isBusy = true;
 
-        await SwapAsync(piece, fromCoordinate, otherPiece, toCoordinate);
-
-        IReadOnlyList<MatchGroup> matches = matchChecker.CheckNeighbouringPair(fromCoordinate, toCoordinate);
-
-        if (matches.Count > 0)
+        try
         {
-            MatchSucceeded?.Invoke(matches);
-        }
-        else
-        {
-            MatchFailed?.Invoke();
+            await SwapAsync(piece, fromCoordinate, otherPiece, toCoordinate);
 
-            await SwapAsync(piece, toCoordinate, otherPiece, fromCoordinate);
-            isBusy = false;
-            return;
-        }
-
-        turnsMade++;
-        TurnMade?.Invoke(turnsMade);
-
-        while (matches.Count > 0)
-        {
-            List<Vector2Int> emptyCells = await RemoveMatchesAsync(matches);
-            List<Vector2Int> fallenPieces = await fallManager.ResolveFallsAsync(emptyCells);
-            matches = matchChecker.CheckAt(fallenPieces);
+            IReadOnlyList<MatchGroup> matches = matchChecker.CheckNeighbouringPair(fromCoordinate, toCoordinate);
 
             if (matches.Count > 0)
             {
@@ -93,17 +83,43 @@ public class TurnResolver
             else
             {
                 MatchFailed?.Invoke();
+                await SwapAsync(piece, toCoordinate, otherPiece, fromCoordinate);
+                return;
             }
+
+            turnsMade++;
+            TurnMade?.Invoke(turnsMade);
+
+            while (matches.Count > 0)
+            {
+                List<Vector2Int> emptyCells = await RemoveMatchesAsync(matches);
+                List<Vector2Int> fallenPieces = await fallManager.ResolveFallsAsync(emptyCells);
+                matches = matchChecker.CheckAt(fallenPieces);
+
+                if (matches.Count > 0)
+                {
+                    MatchSucceeded?.Invoke(matches);
+                }
+                else
+                {
+                    MatchFailed?.Invoke();
+                }
+            }
+
+            //Todo: Handle situations when there are no matches on the field (softlock)
+
+            //potentialMatches = matchChecker.PotentialMatches()
+            //if (potentialMatches.Count == 0)
+            //{
+                //Reshuffle gamefield
+            //}
+
+            TurnResolved?.Invoke();
         }
-
-        //potentialMatches = matchChecker.PotentialMatches()
-        //if (potentialMatches.Count == 0)
-        //{
-            //Reshuffle gamefield
-        //}
-
-        TurnResolved?.Invoke();
-        isBusy = false;
+        finally
+        {
+            isBusy = false;
+        }
     }
 
     private async UniTask SwapAsync(Piece firstPiece, Vector2Int firstCoordinate, Piece secondPiece, Vector2Int secondCoordinate)
