@@ -13,6 +13,16 @@ public class UIManager : MonoBehaviour
     [SerializeField] Image goalIcon;
     [SerializeField] TextMeshProUGUI turnsText;
 
+    [SerializeField] GameObject titleScreenRoot;
+    [SerializeField] Button startButton;
+
+    [SerializeField] GameObject winViewRoot;
+    [SerializeField] Button winRestartButton;
+    [SerializeField] Button winNextLevelButton;
+
+    [SerializeField] GameObject loseViewRoot;
+    [SerializeField] Button loseRestartButton;
+
     [SerializeField] private PieceViewMappingConfig pieceViewMapping;
 
     string maxTurnsText;
@@ -22,23 +32,68 @@ public class UIManager : MonoBehaviour
     string winPieceKey;
 
     [Inject] private GlobalEventBroker globalEventBroker;
-    [Inject] private GameManager gameManager;
     [Inject] private GameConfiguration gameConfiguration;
 
     public void Start()
     {
         levelUIRoot.SetActive(false);
+        winViewRoot.SetActive(false);
+        loseViewRoot.SetActive(false);
+        titleScreenRoot.SetActive(true);
 
-        gameManager.LevelStarted += OnLevelStarted;
+        startButton.onClick.AddListener(OnStartButtonClicked);
+        winRestartButton.onClick.AddListener(OnRestartButtonClicked);
+        winNextLevelButton.onClick.AddListener(OnNextLevelButtonClicked);
+        loseRestartButton.onClick.AddListener(OnRestartButtonClicked);
+
+        globalEventBroker.LevelStarted += OnLevelStarted;
         globalEventBroker.PiecesCollected += OnPiecesCollected;
         globalEventBroker.TurnMade += OnTurnMade;
+        globalEventBroker.LevelWon += OnLevelWon;
+        globalEventBroker.LevelLost += OnLevelLost;
     }
 
     private void OnDestroy()
     {
-        gameManager.LevelStarted -= OnLevelStarted;
+        startButton.onClick.RemoveListener(OnStartButtonClicked);
+        winRestartButton.onClick.RemoveListener(OnRestartButtonClicked);
+        winNextLevelButton.onClick.RemoveListener(OnNextLevelButtonClicked);
+        loseRestartButton.onClick.RemoveListener(OnRestartButtonClicked);
+
+        globalEventBroker.LevelStarted -= OnLevelStarted;
         globalEventBroker.PiecesCollected -= OnPiecesCollected;
         globalEventBroker.TurnMade -= OnTurnMade;
+        globalEventBroker.LevelWon -= OnLevelWon;
+        globalEventBroker.LevelLost -= OnLevelLost;
+    }
+
+    private void OnStartButtonClicked()
+    {
+        titleScreenRoot.SetActive(false);
+        globalEventBroker.RaiseGameStartRequest();
+    }
+
+    private void OnRestartButtonClicked()
+    {
+        winViewRoot.SetActive(false);
+        loseViewRoot.SetActive(false);
+        globalEventBroker.RaiseRestartRequest();
+    }
+
+    private void OnNextLevelButtonClicked()
+    {
+        winViewRoot.SetActive(false);
+        globalEventBroker.RaiseNextLevelRequest();
+    }
+
+    private void OnLevelWon()
+    {
+        winViewRoot.SetActive(true);
+    }
+
+    private void OnLevelLost()
+    {
+        loseViewRoot.SetActive(true);
     }
 
     private void OnLevelStarted(int levelNumber, LevelConfig levelConfig)

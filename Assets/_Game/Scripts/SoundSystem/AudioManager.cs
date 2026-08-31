@@ -10,23 +10,28 @@ public class AudioManager : MonoBehaviour
 
     public void Start()
     {
+        globalEventBroker.GameStartRequest += OnGameStarted;
         globalEventBroker.LevelWon += OnLevelWon;
         globalEventBroker.LevelLost += OnLevelLost;
         globalEventBroker.MatchSucceeded += OnMatchSucceeded;
-        globalEventBroker.MatchSucceeded += OnMatchFailed;
+        globalEventBroker.MatchFailed += OnMatchFailed;
         globalEventBroker.TurnMade += OnTurnMade;
-
-        SoundConfig music1 = audioDatabase.GetSound("music1");
-        audioPlayer.PlayMusic(music1);
     }
 
     private void OnDestroy()
     {
+        globalEventBroker.GameStartRequest -= OnGameStarted;
         globalEventBroker.LevelWon -= OnLevelWon;
         globalEventBroker.LevelLost -= OnLevelLost;
         globalEventBroker.MatchSucceeded -= OnMatchSucceeded;
-        globalEventBroker.MatchSucceeded -= OnMatchFailed;
+        globalEventBroker.MatchFailed -= OnMatchFailed;
         globalEventBroker.TurnMade -= OnTurnMade;
+    }
+
+    private void OnGameStarted()
+    {
+        SoundConfig music1 = audioDatabase.GetSound("music1");
+        audioPlayer.PlayMusic(music1);
     }
 
     private void OnLevelWon()
@@ -47,7 +52,7 @@ public class AudioManager : MonoBehaviour
         audioPlayer.PlaySfx(matchSound);
     }
 
-    private void OnMatchFailed(IReadOnlyList<MatchGroup> matchGroups)
+    private void OnMatchFailed()
     {
         SoundConfig wrongMatchSound = audioDatabase.GetSound("wrong_match");
         audioPlayer.PlaySfx(wrongMatchSound);
