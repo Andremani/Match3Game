@@ -100,10 +100,6 @@ public class TurnResolver : IDisposable
                 {
                     MatchSucceeded?.Invoke(matches);
                 }
-                else
-                {
-                    MatchFailed?.Invoke();
-                }
             }
 
             //Todo: Handle situations when there are no matches on the field (softlock)

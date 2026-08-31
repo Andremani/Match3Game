@@ -1,16 +1,20 @@
 using System.Collections.Generic;
+using Configuration;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer;
 
 public class AudioManager : MonoBehaviour
 {
+    private const float DefaultMusicFadeOutDuration = 0.5f;
+
     [Inject] private GlobalEventBroker globalEventBroker;
     [Inject] private AudioDatabase audioDatabase;
     [Inject] private AudioPlayer audioPlayer;
 
     public void Start()
     {
-        globalEventBroker.GameStartRequest += OnGameStarted;
+        globalEventBroker.LevelStarted += OnLevelStarted;
         globalEventBroker.LevelWon += OnLevelWon;
         globalEventBroker.LevelLost += OnLevelLost;
         globalEventBroker.MatchSucceeded += OnMatchSucceeded;
@@ -20,7 +24,7 @@ public class AudioManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        globalEventBroker.GameStartRequest -= OnGameStarted;
+        globalEventBroker.LevelStarted -= OnLevelStarted;
         globalEventBroker.LevelWon -= OnLevelWon;
         globalEventBroker.LevelLost -= OnLevelLost;
         globalEventBroker.MatchSucceeded -= OnMatchSucceeded;
@@ -28,7 +32,7 @@ public class AudioManager : MonoBehaviour
         globalEventBroker.TurnMade -= OnTurnMade;
     }
 
-    private void OnGameStarted()
+    private void OnLevelStarted(int levelNumber, LevelConfig levelConfig)
     {
         SoundConfig music1 = audioDatabase.GetSound("music1");
         audioPlayer.PlayMusic(music1);
@@ -36,6 +40,12 @@ public class AudioManager : MonoBehaviour
 
     private void OnLevelWon()
     {
+        LevelWonMusicAsync().Forget();
+    }
+
+    private async UniTaskVoid LevelWonMusicAsync()
+    {
+        await audioPlayer.StopMusic(DefaultMusicFadeOutDuration);
         SoundConfig winSound = audioDatabase.GetSound("win");
         audioPlayer.PlaySfx(winSound);
     }

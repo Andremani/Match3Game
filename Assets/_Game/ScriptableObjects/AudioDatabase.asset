@@ -17,7 +17,7 @@ MonoBehaviour:
     config:
       clips:
       - {fileID: 8300000, guid: c64e601c6e3406943a2e72e0cf96df7b, type: 3}
-      volume: 1
+      volume: 0.807
       minPitch: 1
       maxPitch: 1
   - key: win
@@ -40,7 +40,7 @@ MonoBehaviour:
     config:
       clips:
       - {fileID: 8300000, guid: 71c794d752e68084bb60fadf147cc851, type: 3}
-      volume: 0.797
+      volume: 1
       minPitch: 0.95
       maxPitch: 1.05
   - key: move

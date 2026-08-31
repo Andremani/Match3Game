@@ -48,7 +48,6 @@ public class LevelManager : MonoBehaviour
         if (pieceKey != winPieceKey) return;
 
         collectedWinPieceCount += amount;
-        Debug.Log($"Collected {collectedWinPieceCount}/{levelConfig.WinPieceAmount} '{winPieceKey}'");
     }
 
     public void RegisterTurnMade(int turnNumber)

@@ -58,8 +58,6 @@ public class MatchChecker
         {
             matches = FindAllMatches();
         }
-        
-        Debug.Log("Matches count - " + matches.Count);
         return matches;
     }
 

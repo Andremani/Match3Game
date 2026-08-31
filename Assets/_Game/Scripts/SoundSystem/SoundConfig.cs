@@ -9,6 +9,7 @@ public class SoundConfig
     [Range(0.5f, 1.5f)] [SerializeField] private float minPitch = 0.95f;
     [Range(0.5f, 1.5f)] [SerializeField] private float maxPitch = 1.05f;
 
+    public float Volume => volume;
     public void ApplyToSource(AudioSource source)
     {
         if (clips == null || clips.Length == 0) return;
