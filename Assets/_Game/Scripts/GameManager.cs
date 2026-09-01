@@ -12,6 +12,8 @@ public class GameManager : IAsyncStartable, System.IDisposable
     private GameConfiguration gameConfiguration;
     private GlobalEventBroker globalEventBroker;
 
+    private const bool ReloadConfigsBeforeLevelStart = true;
+
     public int CurrentLevelNumber { get; private set; }
 
     public GameManager(LevelLifetimeScope levelLifetimeScopePrefab, GameConfiguration gameConfiguration, GlobalEventBroker globalEventBroker)
@@ -40,28 +42,49 @@ public class GameManager : IAsyncStartable, System.IDisposable
     private void StartFirstLevel()
     {
         if (currentLevel != null) return;
-        StartLevel(1);
+        StartLevelAsync(1).Forget();
     }
 
     private void RestartLevel()
     {
-        DestroyLevel(currentLevel);
-        StartLevel(CurrentLevelNumber);
+        RestartLevelAsync().Forget();
+
+        async UniTask RestartLevelAsync()
+        {
+            LevelLifetimeScope previousLevel = currentLevel;
+            await StartLevelAsync(CurrentLevelNumber);
+            DestroyLevel(previousLevel);
+        }
     }
 
     private void StartNextLevel()
     {
-        DestroyLevel(currentLevel);
+        StartNextLevelAsync().Forget();
 
-        bool doesNextLevelExist = gameConfiguration.LevelsListConfig.LevelNames.Count >= CurrentLevelNumber + 1;
-        if(doesNextLevelExist)
+        async UniTask StartNextLevelAsync()
         {
-            StartLevel(CurrentLevelNumber + 1);
+            LevelLifetimeScope previousLevel = currentLevel;
+
+            bool doesNextLevelExist = gameConfiguration.LevelsListConfig.LevelNames.Count >= CurrentLevelNumber + 1;
+            if(doesNextLevelExist)
+            {
+                await StartLevelAsync(CurrentLevelNumber + 1);
+            }
+            else
+            {
+                globalEventBroker.RaiseGameWin();
+            }
+            DestroyLevel(previousLevel);
         }
-        else
+    }
+
+    private async UniTask StartLevelAsync(int levelNumber)
+    {
+        if(ReloadConfigsBeforeLevelStart)
         {
-            globalEventBroker.RaiseGameWin();
+            await gameConfiguration.LoadAllConfigsAsync();
         }
+        StartLevel(levelNumber);
     }
 
     private void StartLevel(int levelNumber)
