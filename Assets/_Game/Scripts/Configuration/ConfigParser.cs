@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Configuration
 {
@@ -93,10 +94,21 @@ namespace Configuration
                 }
             }
 
+            char[] regularPieceTypes = null;
+            if (headers.TryGetValue("RegularPieceTypes", out string regularPieceTypesRaw) &&
+                !string.IsNullOrEmpty(regularPieceTypesRaw))
+            {
+                regularPieceTypes = regularPieceTypesRaw
+                    .Split(',')
+                    .Select(symbol => symbol.Trim()[0])
+                    .ToArray();
+            }
+
             return new LevelConfig(
                 horizontalSize,
                 verticalSize,
                 int.Parse(headers["MaxRegularPieceTypes"]),
+                regularPieceTypes,
                 headers["WinPieceType"][0],
                 int.Parse(headers["WinPieceAmount"]),
                 int.Parse(headers["MaxTurns"]),

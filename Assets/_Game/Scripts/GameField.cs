@@ -31,7 +31,13 @@ public class GameField
     {
         width = levelConfig.HorizontalSize;
         height = levelConfig.VerticalSize;
-        if(levelConfig.MaxRegularPieceTypes > 0)
+        if (levelConfig.RegularPieceTypes != null && levelConfig.RegularPieceTypes.Length > 0)
+        {
+            regularPiecesTypePool = levelConfig.RegularPieceTypes
+                .Select(symbol => pieceMappings.PieceKeysBySymbol[symbol])
+                .ToList();
+        }
+        else if (levelConfig.MaxRegularPieceTypes > 0)
         {
             regularPiecesTypePool = pieceMappings.OrderedSymbols
                 .Take(levelConfig.MaxRegularPieceTypes)
