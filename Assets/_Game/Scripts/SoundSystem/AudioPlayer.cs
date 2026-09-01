@@ -18,6 +18,8 @@ public class AudioPlayer : MonoBehaviour, IAudioPlayer
     private SoundConfig currentMusicSoundConfig;
     private CancellationTokenSource fadeCTS;
 
+    private bool muteMusic = false;
+
     private void Awake()
     {
         sfxPool = new ObjectPool<AudioSource>(
@@ -71,6 +73,11 @@ public class AudioPlayer : MonoBehaviour, IAudioPlayer
         config.ApplyToSource(musicSource);
         musicSource.loop = loop;
         musicSource.Play();
+
+        if(muteMusic)
+        {
+            musicSource.volume = 0;
+        }
     }
 
     public async UniTask StopMusic(float fadeDuration = 0)
@@ -91,6 +98,19 @@ public class AudioPlayer : MonoBehaviour, IAudioPlayer
         }
         catch (System.OperationCanceledException)
         {}
+    }
+
+    public void ToggleMusicMute()
+    {
+        muteMusic = !muteMusic;
+        if(muteMusic)
+        {
+            musicSource.volume = 0;
+        }
+        else
+        {
+            musicSource.volume = currentMusicSoundConfig.Volume;
+        }
     }
 
     private async UniTask FadeOutAndStopMusicAsync(float duration, CancellationToken token)

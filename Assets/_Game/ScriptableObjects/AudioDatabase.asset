@@ -17,7 +17,7 @@ MonoBehaviour:
     config:
       clips:
       - {fileID: 8300000, guid: c64e601c6e3406943a2e72e0cf96df7b, type: 3}
-      volume: 0.807
+      volume: 0.65
       minPitch: 1
       maxPitch: 1
   - key: win
@@ -26,7 +26,7 @@ MonoBehaviour:
       - {fileID: 8300000, guid: e9dea202103509e4084dd3f667af1551, type: 3}
       - {fileID: 8300000, guid: a76f3c04b5b4c704f9cca5ffa8ed8ad9, type: 3}
       - {fileID: 8300000, guid: 3b9b7a6a95d960942887daf31e0a6c9b, type: 3}
-      volume: 1
+      volume: 0.8
       minPitch: 1
       maxPitch: 1
   - key: fail

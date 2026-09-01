@@ -15,6 +15,7 @@ public class GlobalEventBroker
     public event Action<string, int> PiecesCollected;
     public event Action<IReadOnlyList<MatchGroup>> MatchSucceeded;
     public event Action MatchFailed;
+    public event Action ToggleMusic;
     public event Action GameWin;
 
     public void RaisePieceMatchResolved(string pieceKey) => PieceMatchResolved?.Invoke(pieceKey);
@@ -28,5 +29,6 @@ public class GlobalEventBroker
     public void RaisePiecesCollected(string pieceKey, int amount) => PiecesCollected?.Invoke(pieceKey, amount);
     public void RaiseMatchSucceeded(IReadOnlyList<MatchGroup> matches) => MatchSucceeded?.Invoke(matches);
     public void RaiseMatchFailed() => MatchFailed?.Invoke();
+    public void RaiseToggleMusicRequest() => ToggleMusic?.Invoke();
     public void RaiseGameWin() => GameWin?.Invoke();
 }

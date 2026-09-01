@@ -20,6 +20,7 @@ public class AudioManager : MonoBehaviour
         globalEventBroker.MatchSucceeded += OnMatchSucceeded;
         globalEventBroker.MatchFailed += OnMatchFailed;
         globalEventBroker.TurnMade += OnTurnMade;
+        globalEventBroker.ToggleMusic += audioPlayer.ToggleMusicMute;
     }
 
     private void OnDestroy()
@@ -30,6 +31,7 @@ public class AudioManager : MonoBehaviour
         globalEventBroker.MatchSucceeded -= OnMatchSucceeded;
         globalEventBroker.MatchFailed -= OnMatchFailed;
         globalEventBroker.TurnMade -= OnTurnMade;
+        globalEventBroker.ToggleMusic -= audioPlayer.ToggleMusicMute;
     }
 
     private void OnLevelStarted(int levelNumber, LevelConfig levelConfig)
