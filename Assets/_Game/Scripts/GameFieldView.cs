@@ -5,8 +5,10 @@ using UnityEngine.Tilemaps;
 
 public class GameFieldView : MonoBehaviour
 {
+    [SerializeField] private Tilemap underlayTilemap;
     [SerializeField] private Tilemap maskTilemap;
     [SerializeField] private Tilemap cellsTilemap;
+    [SerializeField] private TileBase underlayTile;
     [SerializeField] private TileBase maskTile;
     [SerializeField] private TileBase cellTile;
     [SerializeField] private Transform piecesParent;
@@ -22,15 +24,18 @@ public class GameFieldView : MonoBehaviour
         this.fieldHeight = fieldHeight;
         this.fieldWidth = fieldWidth;
 
+        underlayTilemap.ClearAllTiles();
         maskTilemap.ClearAllTiles();
         cellsTilemap.ClearAllTiles();
 
         foreach (var cell in cells.Values)
         {
+            underlayTilemap.SetTile(ToCellPosition(cell.Coordinate), underlayTile);
             maskTilemap.SetTile(ToCellPosition(cell.Coordinate), maskTile);
             cellsTilemap.SetTile(ToCellPosition(cell.Coordinate), cellTile);  
         }
 
+        underlayTilemap.CompressBounds();
         maskTilemap.CompressBounds();
         cellsTilemap.CompressBounds();
     }
