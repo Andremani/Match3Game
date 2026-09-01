@@ -1,0 +1,15 @@
+/Build/*.js.br
+  Content-Encoding: br
+  ContentType: application/javascript
+
+/Build/*.wasm.br
+  Content-Encoding: br
+  ContentType: application/wasm
+
+/Build/*.data.br
+  Content-Encoding: br
+  ContentType: application/octet-stream
+
+/Build/*.framework.js.br
+  Content-Encoding: br
+  ContentType: application/javascript
