@@ -52,7 +52,16 @@ public class GameManager : IAsyncStartable, System.IDisposable
     private void StartNextLevel()
     {
         DestroyLevel(currentLevel);
-        StartLevel(CurrentLevelNumber + 1);
+
+        bool doesNextLevelExist = gameConfiguration.LevelsListConfig.LevelNames.Count >= CurrentLevelNumber + 1;
+        if(doesNextLevelExist)
+        {
+            StartLevel(CurrentLevelNumber + 1);
+        }
+        else
+        {
+            globalEventBroker.RaiseGameWin();
+        }
     }
 
     private void StartLevel(int levelNumber)

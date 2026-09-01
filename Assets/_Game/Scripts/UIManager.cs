@@ -23,6 +23,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] GameObject loseViewRoot;
     [SerializeField] Button loseRestartButton;
 
+    [SerializeField] GameObject winGameScreenRoot;
+
     [SerializeField] private PieceViewMappingConfig pieceViewMapping;
 
     string maxTurnsText;
@@ -40,6 +42,7 @@ public class UIManager : MonoBehaviour
         winViewRoot.SetActive(false);
         loseViewRoot.SetActive(false);
         titleScreenRoot.SetActive(true);
+        winGameScreenRoot.SetActive(false);
 
         startButton.onClick.AddListener(OnStartButtonClicked);
         winRestartButton.onClick.AddListener(OnRestartButtonClicked);
@@ -51,6 +54,7 @@ public class UIManager : MonoBehaviour
         globalEventBroker.TurnMade += OnTurnMade;
         globalEventBroker.LevelWon += OnLevelWon;
         globalEventBroker.LevelLost += OnLevelLost;
+        globalEventBroker.GameWin += OnGameWin;
     }
 
     private void OnDestroy()
@@ -94,6 +98,11 @@ public class UIManager : MonoBehaviour
     private void OnLevelLost()
     {
         loseViewRoot.SetActive(true);
+    }
+
+    private void OnGameWin()
+    {
+        winGameScreenRoot.SetActive(true);
     }
 
     private void OnLevelStarted(int levelNumber, LevelConfig levelConfig)
