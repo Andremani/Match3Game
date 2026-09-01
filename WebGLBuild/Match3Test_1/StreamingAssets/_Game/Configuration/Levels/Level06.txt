@@ -1,0 +1,21 @@
+HorizontalSize: 16
+VerticalSize: 7
+
+MaxRegularPieceTypes: 5
+
+WinPieceType: 5
+WinPieceAmount: 42
+
+MaxTurns: 40
+
+LevelMap:
+
+--************--
+****************
+-**************-
+*******--*******
+-**************-
+****************
+-**************-
+
+LevelMapEnd
