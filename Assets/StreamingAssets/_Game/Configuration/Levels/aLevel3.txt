@@ -1,5 +1,5 @@
 HorizontalSize: 8
-VerticalSize: 9
+VerticalSize: 8
 
 MaxRegularPieceTypes: 4
 

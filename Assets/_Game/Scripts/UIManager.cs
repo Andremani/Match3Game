@@ -12,6 +12,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] TextMeshProUGUI goalText;
     [SerializeField] Image goalIcon;
     [SerializeField] TextMeshProUGUI turnsText;
+    [SerializeField] Button restartButton;
 
     [SerializeField] GameObject titleScreenRoot;
     [SerializeField] Button startButton;
@@ -45,6 +46,7 @@ public class UIManager : MonoBehaviour
         winGameScreenRoot.SetActive(false);
 
         startButton.onClick.AddListener(OnStartButtonClicked);
+        restartButton.onClick.AddListener(OnRestartButtonClicked);
         winRestartButton.onClick.AddListener(OnRestartButtonClicked);
         winNextLevelButton.onClick.AddListener(OnNextLevelButtonClicked);
         loseRestartButton.onClick.AddListener(OnRestartButtonClicked);
@@ -60,6 +62,7 @@ public class UIManager : MonoBehaviour
     private void OnDestroy()
     {
         startButton.onClick.RemoveListener(OnStartButtonClicked);
+        restartButton.onClick.RemoveListener(OnRestartButtonClicked);
         winRestartButton.onClick.RemoveListener(OnRestartButtonClicked);
         winNextLevelButton.onClick.RemoveListener(OnNextLevelButtonClicked);
         loseRestartButton.onClick.RemoveListener(OnRestartButtonClicked);
