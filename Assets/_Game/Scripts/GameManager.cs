@@ -12,7 +12,11 @@ public class GameManager : IAsyncStartable, System.IDisposable
     private GameConfiguration gameConfiguration;
     private GlobalEventBroker globalEventBroker;
 
+#if UNITY_EDITOR
     private const bool ReloadConfigsBeforeLevelStart = true;
+#else
+    private const bool ReloadConfigsBeforeLevelStart = false;
+#endif
 
     public int CurrentLevelNumber { get; private set; }
 

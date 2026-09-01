@@ -75,6 +75,7 @@ public class UIManager : MonoBehaviour
         globalEventBroker.TurnMade -= OnTurnMade;
         globalEventBroker.LevelWon -= OnLevelWon;
         globalEventBroker.LevelLost -= OnLevelLost;
+        globalEventBroker.GameWin -= OnGameWin;
     }
 
     private void OnStartButtonClicked()
