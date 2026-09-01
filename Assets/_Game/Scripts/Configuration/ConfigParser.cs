@@ -94,6 +94,12 @@ namespace Configuration
                 }
             }
 
+            int maxRegularPieceTypes = 4;
+            if(headers.ContainsKey("MaxRegularPieceTypes"))
+            {
+                maxRegularPieceTypes = int.Parse(headers["MaxRegularPieceTypes"]);
+            }
+
             char[] regularPieceTypes = null;
             if (headers.TryGetValue("RegularPieceTypes", out string regularPieceTypesRaw) &&
                 !string.IsNullOrEmpty(regularPieceTypesRaw))
@@ -107,7 +113,7 @@ namespace Configuration
             return new LevelConfig(
                 horizontalSize,
                 verticalSize,
-                int.Parse(headers["MaxRegularPieceTypes"]),
+                maxRegularPieceTypes,
                 regularPieceTypes,
                 headers["WinPieceType"][0],
                 int.Parse(headers["WinPieceAmount"]),
