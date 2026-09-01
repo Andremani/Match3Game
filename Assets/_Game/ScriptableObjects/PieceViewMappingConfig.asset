@@ -32,3 +32,19 @@ MonoBehaviour:
     Sprite: {fileID: -5393387381243016044, guid: 0a24d9cf62d65804b85542f2a2c82d29, type: 3}
   - Key: dark_stone
     Sprite: {fileID: 2841740978675582535, guid: 67cfa8887629ef449b994a9cf04191e3, type: 3}
+  - Key: barrel
+    Sprite: {fileID: 21300000, guid: fcd0989aab8498f41ac8a5155c89b06b, type: 3}
+  - Key: spear
+    Sprite: {fileID: 21300000, guid: 3d14a16f6c72bdb4ebf195077eddee89, type: 3}
+  - Key: bomb
+    Sprite: {fileID: 21300000, guid: 36584331def0b134d9882c9f9a35e15e, type: 3}
+  - Key: book
+    Sprite: {fileID: 21300000, guid: 338e1099a1da4b343b84044884c347b7, type: 3}
+  - Key: chest
+    Sprite: {fileID: 21300000, guid: 16c4518fd5b10ff4c899c046659e918d, type: 3}
+  - Key: key
+    Sprite: {fileID: 21300000, guid: 23b521ff0bbe38442a7e77b9132cc5f9, type: 3}
+  - Key: potion
+    Sprite: {fileID: 21300000, guid: 889532f63c50b8a4a82fe10296f37e95, type: 3}
+  - Key: scroll
+    Sprite: {fileID: 21300000, guid: 783b35edb23c386468432245620eb0d8, type: 3}

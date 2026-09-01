@@ -7,3 +7,11 @@
 7: gray_stone
 8: blue_stone
 9: dark_stone
+a: barrel
+b: spear
+c: bomb
+d: book
+e: chest
+f: key
+g: potion
+h: scroll
