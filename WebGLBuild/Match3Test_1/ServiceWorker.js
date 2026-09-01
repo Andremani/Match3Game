@@ -1,9 +1,9 @@
 const cacheName = "Andremani-Match3Test-1.0";
 const contentToCache = [
     "Build/Match3Test_1.loader.js",
-    "Build/Match3Test_1.framework.js.br",
-    "Build/Match3Test_1.data.br",
-    "Build/Match3Test_1.wasm.br",
+    "Build/Match3Test_1.framework.js.unityweb",
+    "Build/Match3Test_1.data.unityweb",
+    "Build/Match3Test_1.wasm.unityweb",
     "TemplateData/style.css"
 
 ];
